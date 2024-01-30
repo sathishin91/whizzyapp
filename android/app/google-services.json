@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "447841916444",
+    "project_id": "pcs-mapp",
+    "storage_bucket": "pcs-mapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:447841916444:android:bf4318465c59b3583fb1d9",
+        "android_client_info": {
+          "package_name": "com.whizzstar.pcs"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnLb5QlOs1FR0DJq_8KnAv0o7vSV0JCrs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

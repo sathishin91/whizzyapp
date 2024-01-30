@@ -1,4 +1,4 @@
-package com.example.whizzy
+package com.whizzstar.pcs
 
 import io.flutter.embedding.android.FlutterActivity
 
