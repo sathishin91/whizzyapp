@@ -24,6 +24,27 @@ class ThemeConstants {
   static const Color white = Color(backgroundColorCode);
   static const grey = Color(greyColorCode);
 
+  static const Color entryTotalColorCode = Color(0xFF66BB6A);
+  static const Color exitTotalColorCode = Color(0xFFFFA726);
+  static const Color peakHourColorCode = Color(0xFF42A5F5);
+  static const Color avgDwellTimeColorCode = Color(0xFFBDBDBD);
+
+  static const MaterialColor primaryColorSwatch = MaterialColor(
+    primaryColorCode,
+    <int, Color>{
+      50: Color(primaryColorCode),
+      100: Color(primaryColorCode),
+      200: Color(primaryColorCode),
+      300: Color(primaryColorCode),
+      400: Color(primaryColorCode),
+      500: Color(primaryColorCode),
+      600: Color(primaryColorCode),
+      700: Color(primaryColorCode),
+      800: Color(primaryColorCode),
+      900: Color(primaryColorCode),
+    },
+  );
+
   //status color
   static const Color green = Color(greenColorCode);
   static const Color red = Color(redColorCode);
@@ -41,7 +62,6 @@ class ThemeConstants {
     // Calculate the scaling factor based on the device's DPI
     final scaleFactor = devicePixelRatio / referenceDPI;
     // Return the scaling factor
-    print("object $scaleFactor");
     return scaleFactor;
   }
 
@@ -63,6 +83,7 @@ class ThemeConstants {
       titleLarge: TextStyle(
         fontFamily: fontFamily,
         fontSize: 20 * textScaleFactor,
+        fontWeight: FontWeight.w700,
       ),
       titleMedium: TextStyle(
         fontFamily: fontFamily,

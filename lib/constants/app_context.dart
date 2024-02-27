@@ -1,4 +1,5 @@
 import '../models/dropdown_model.dart';
+import '../models/sensorListDashboard.dart';
 
 class AppContext {
   AppContext._privateConstructor();
@@ -10,4 +11,8 @@ class AppContext {
   String baseUrl = "";
 
   List<ListDropdown> listDropdown = [];
+  // DashboardSensorList sensorListData;
+  List<HourlyEntry> hourlyEntry = [];
+  List<HourlyEntry> hourlyExit = [];
+  List<HourlyEntry> hourlyOccupancy = [];
 }

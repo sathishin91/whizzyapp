@@ -13,6 +13,8 @@ void main() {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight
     ]).then((value) => runApp(const MyApp()));
   }, (error, stack) {
     //   FirebaseCrashlytics.instance.recordError(error, stack);

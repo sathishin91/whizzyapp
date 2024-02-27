@@ -30,7 +30,13 @@ class _NotificationFragmentState extends State<NotificationFragment> {
             //       padding: const EdgeInsets.all(8.0),
             //       child: Column(
             //         children: [
-            const Text("Coming Soon"),
+            Text(
+              "Coming Soon",
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge!
+                  .copyWith(fontWeight: FontWeight.bold),
+            ),
             //         ],
             //       ),
             //     ),

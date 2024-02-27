@@ -27,6 +27,16 @@ class LoginError extends LoginState {
   List<Object?> get props => [appErrorType, errorMessage];
 }
 
+class IPError extends LoginState {
+  final AppErrorType appErrorType;
+  final String? errorMessage;
+
+  const IPError({required this.appErrorType, this.errorMessage});
+
+  @override
+  List<Object?> get props => [appErrorType, errorMessage];
+}
+
 class IPInfoLoaded extends LoginState {
   const IPInfoLoaded() : super();
 

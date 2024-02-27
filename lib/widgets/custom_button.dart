@@ -32,7 +32,7 @@ class CustomButton extends StatelessWidget {
     if (buttonWidth == double.infinity) {
       width = MediaQuery.of(context).size.width * 0.65;
     }
-    return Container(
+    return SizedBox(
       width: width,
       child: ElevatedButton(
         onPressed: onPressed,
@@ -60,10 +60,10 @@ class CustomButton extends StatelessWidget {
         child: Text(
           title,
           style: textStyle?.copyWith(color: textColor) ??
-              ThemeConstants.btnTheme.copyWith(
-                color: textColor,
-                fontSize: fontSize ?? 18,
-              ),
+              Theme.of(context).textTheme.titleMedium!.copyWith(
+                    color: textColor,
+                    fontSize: fontSize ?? 18,
+                  ),
         ),
       ),
     );

@@ -33,3 +33,28 @@ class DashboardInfoLoaded extends DashboardState {
   @override
   List<Object> get props => [];
 }
+
+class DashboardSensorInfoLoaded extends DashboardState {
+  final DashboardSensorList dashboardSensorList;
+  const DashboardSensorInfoLoaded({required this.dashboardSensorList})
+      : super();
+
+  @override
+  List<Object> get props => [dashboardSensorList];
+}
+
+class ReportSensorInfoLoaded extends DashboardState {
+  final ReportModel reportModel;
+  const ReportSensorInfoLoaded({required this.reportModel}) : super();
+
+  @override
+  List<Object> get props => [reportModel];
+}
+
+class SensorDataInfoLoaded extends DashboardState {
+  final SensorData sensorData;
+  const SensorDataInfoLoaded({required this.sensorData}) : super();
+
+  @override
+  List<Object> get props => [sensorData];
+}

@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:whizzy/constants/constant_export.dart';
 
 import '../core/app_error.dart';
-import 'theme_constants.dart';
+import 'constant_export.dart';
 
-InputDecoration inputDecoration(String labelText, {Icon? prefixIcon}) {
+InputDecoration inputDecoration(BuildContext context, String labelText,
+    {Icon? prefixIcon}) {
   return InputDecoration(
+    prefixIconColor: ThemeConstants.primaryColor,
     labelText: labelText,
     prefixIcon: prefixIcon,
+    labelStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+          color: ThemeConstants.primaryColor,
+        ),
     border: OutlineInputBorder(
       borderSide: BorderSide(color: Colors.grey.shade500, width: 30.0),
       borderRadius: BorderRadius.circular(12.0),

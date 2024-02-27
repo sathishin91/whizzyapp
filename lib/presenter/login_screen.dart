@@ -3,13 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:whizzy/blocs/login/login_cubit.dart';
-import 'package:whizzy/constants/constant_export.dart';
-import 'package:whizzy/widgets/loading_widget.dart';
 
+import '../blocs/dashboard/dashboard_cubit.dart';
+import '../blocs/login/login_cubit.dart';
+import '../constants/app_context.dart';
+import '../constants/constant_export.dart';
 import '../constants/utilities.dart';
+import '../core/preference_helper.dart';
 import '../routes/route_generator.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/loading_widget.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,25 +27,32 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool enableLoginFlow = true;
+  bool _isObscure = true;
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor: ThemeConstants.white,
         resizeToAvoidBottomInset: false,
         body: BlocConsumer<LoginCubit, LoginState>(
           listener: (context, state) {
-            if (state is LoginError) {
+            if (state is IPError) {
+              enableLoginFlow = true;
               showErrorToast(
                   appErrorType: state.appErrorType,
                   errorMessage: state.errorMessage);
-            }
-            if (state is IPInfoLoaded) {
+            } else if (state is LoginError) {
+              showErrorToast(
+                  appErrorType: state.appErrorType,
+                  errorMessage: state.errorMessage);
+            } else if (state is IPInfoLoaded) {
               enableLoginFlow = false;
-            }
-            if (state is LoginInfoLoaded) {
-              Navigator.pushNamed(
+            } else if (state is LoginInfoLoaded) {
+              context.read<DashboardCubit>().loadDropdownList();
+              Navigator.pushNamedAndRemoveUntil(
                 context,
                 Routes.dashboard,
+                ((route) => false),
               );
             }
           },
@@ -58,12 +68,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     Expanded(
                       flex: 3,
                       child: Center(
-                        child: Text(
-                          "WHIZZY PEOPLE COUNT",
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge!
-                              .copyWith(color: ThemeConstants.primaryColor),
+                        child: Image.asset(
+                          "assets/pngs/logo.png",
+                          height: 120,
+                          width: double.infinity,
                         ),
                       ),
                     ),
@@ -78,10 +86,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               Expanded(
                                 child: TextFormField(
                                   decoration: inputDecoration(
+                                    context,
                                     'IP Code',
                                     prefixIcon:
                                         const Icon(Icons.important_devices),
                                   ),
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                   controller: _ipCodeController,
                                   keyboardType: TextInputType.text,
                                   validator: (value) {
@@ -126,7 +136,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: Column(
                                     children: [
                                       TextFormField(
-                                        decoration: inputDecoration('Email',
+                                        decoration: inputDecoration(
+                                            context, 'Email',
                                             prefixIcon:
                                                 const Icon(Icons.email)),
                                         controller: _emailController,
@@ -141,11 +152,58 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                       Gap(20.h),
                                       TextFormField(
-                                        decoration: inputDecoration('Password',
-                                            prefixIcon:
-                                                const Icon(Icons.password)),
+                                        decoration: InputDecoration(
+                                          labelText: 'Password',
+                                          prefixIcon: const Icon(Icons.lock),
+                                          suffixIcon: GestureDetector(
+                                            onTap: () {
+                                              setState(() {
+                                                _isObscure =
+                                                    !_isObscure; // Toggle the obscureText state
+                                              });
+                                            },
+                                            child: Icon(_isObscure
+                                                ? Icons.visibility
+                                                : Icons.visibility_off),
+                                          ),
+                                          labelStyle: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium!
+                                              .copyWith(
+                                                color:
+                                                    ThemeConstants.primaryColor,
+                                              ),
+                                          border: OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                                color: Colors.grey.shade500,
+                                                width: 30.0),
+                                            borderRadius:
+                                                BorderRadius.circular(12.0),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.grey.shade500,
+                                                  width: 1.0),
+                                              borderRadius:
+                                                  BorderRadius.circular(12.0)),
+                                          enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.grey.shade500,
+                                                  width: 1.0),
+                                              borderRadius:
+                                                  BorderRadius.circular(12.0)),
+                                          errorBorder: OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                                color: Colors.grey.shade500,
+                                                width: 1.0),
+                                            borderRadius:
+                                                BorderRadius.circular(12.0),
+                                          ),
+                                        ),
                                         controller: _passwordController,
-                                        keyboardType: TextInputType.number,
+                                        keyboardType: TextInputType.text,
+                                        obscureText:
+                                            _isObscure, // Set the obscureText property based on _isObscure state
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
                                             return 'Please enter password';
@@ -153,6 +211,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                           return null;
                                         },
                                       ),
+                                      // TextFormField(
+                                      //   decoration: inputDecoration(
+                                      //       context, 'Password',
+                                      //       prefixIcon:
+                                      //           const Icon(Icons.password)),
+                                      //   controller: _passwordController,
+                                      //   keyboardType: TextInputType.text,
+                                      //   obscureText: true,
+                                      //   validator: (value) {
+                                      //     if (value == null || value.isEmpty) {
+                                      //       return 'Please enter password';
+                                      //     }
+                                      //     return null;
+                                      //   },
+                                      // ),
                                       Gap(20.h),
                                       Padding(
                                         padding: const EdgeInsets.only(
@@ -160,7 +233,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                         child: CustomButton(
                                           title: "Login",
                                           color: ThemeConstants.white,
-                                          onPressed: () {
+                                          onPressed: () async {
+                                            AppContext().baseUrl =
+                                                (await PreferenceHelper
+                                                    .getBaseUrl())!;
+
                                             if (_formKey.currentState!
                                                 .validate()) {
                                               _formKey.currentState!.save();

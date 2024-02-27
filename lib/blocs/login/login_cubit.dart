@@ -1,10 +1,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:whizzy/core/preference_helper.dart';
 
-import '../../constants/app_context.dart';
 import '../../core/app_error.dart';
+import '../../core/preference_helper.dart';
 import '../../models/custom_response_model.dart';
 import '../../repository/login_repository.dart';
 
@@ -23,22 +22,20 @@ class LoginCubit extends Cubit<LoginState> {
     final Either<AppError, CustomResponse> response =
         await _loginRepository.generateCode(code: ipCode);
     response.fold(
-        (l) => emit(LoginError(
+        (l) => emit(IPError(
               appErrorType: l.appErrorType,
             )), (r) {
       if (r.success) {
         if (r.data != null) {
           final ipAddress = r.data['ip'];
           final portNumber = r.data['port'];
-          AppContext().baseUrl = ipAddress + ":" + portNumber;
           PreferenceHelper.saveBaseUrl(ipAddress + ":" + portNumber);
           emit(const IPInfoLoaded());
         } else {
-          emit(
-              LoginError(appErrorType: AppErrorType.api, errorMessage: r.data));
+          emit(IPError(appErrorType: AppErrorType.api, errorMessage: r.data));
         }
       } else {
-        emit(LoginError(appErrorType: AppErrorType.api, errorMessage: r.data));
+        emit(IPError(appErrorType: AppErrorType.api, errorMessage: r.data));
       }
     });
   }
@@ -56,7 +53,6 @@ class LoginCubit extends Cubit<LoginState> {
             )), (r) {
       if (r.success) {
         if (r.data != null) {
-          print(" dataaaaaaa------ ${r.data}");
           PreferenceHelper.saveUpdateCheckIfAccountCreated(true);
           emit(const LoginInfoLoaded());
         } else {

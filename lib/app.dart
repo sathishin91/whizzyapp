@@ -21,8 +21,10 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return ScreenUtilInit(
       builder: (_, __) => MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: AppTitle.appTitle,
-        theme: AppTheme.buildTheme(context),
+        theme: AppTheme.lightTheme(context),
+        darkTheme: AppTheme.buildTheme(context),
         themeMode: ThemeMode.light,
         initialRoute: Routes.initial,
         onGenerateRoute: _routeGenerator.generateRoute,

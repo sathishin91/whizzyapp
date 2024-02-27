@@ -1,4 +1,4 @@
-name: whizzy
+name: WHIZZYPCS
 description: A new Flutter project.
 
 # The following line prevents the package from being accidentally published to
@@ -51,6 +51,9 @@ dependencies:
   syncfusion_flutter_charts: ^19.4.56
   shared_preferences: ^2.0.16
   custom_date_range_picker: ^1.0.6
+  datetime_picker_formfield_new: ^2.1.0
+  calendar_date_picker2: ^0.5.3
+  date_range_form_field: ^1.0.2  
 
 dev_dependencies:
   flutter_test:
@@ -62,8 +65,12 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
+  flutter_launcher_icons: ^0.9.3
 
-
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/pngs/logo.png"
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -91,17 +98,20 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
+  fonts:
+    - family: CustomIcons
+      fonts:
+        - asset: assets/fonts/CustomIcons.ttf
+    - family: CustomIcons2
+      fonts:
+        - asset: assets/fonts/CustomIcons2.ttf
+    - family: Gilmer
+      fonts:
+        - asset: assets/fonts/Gilmer-Light.otf
+        - asset: assets/fonts/Gilmer-Regular.otf
+        - asset: assets/fonts/Gilmer-Medium.otf
+        - asset: assets/fonts/Gilmer-Bold.otf
+
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

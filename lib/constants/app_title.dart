@@ -2,7 +2,7 @@
 class AppTitle {
   AppTitle._();
 
-  static const String appTitle = "Seekk Jobs";
+  static const String appTitle = "WHIZZY PCS";
 
   static const String dashboard = "Home";
 }

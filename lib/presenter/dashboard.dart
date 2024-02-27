@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_rounded_date_picker/flutter_rounded_date_picker.dart';
-import 'package:gap/gap.dart';
-import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:whizzy/blocs/dashboard/dashboard_cubit.dart';
 
+import '../blocs/dashboard/dashboard_cubit.dart';
 import '../constants/theme_constants.dart';
 import '../models/SampleListModel.dart';
 import 'fragment/Home_Fragment.dart';
@@ -119,6 +116,7 @@ class _DashboardState extends State<Dashboard> {
       child: Scaffold(
         backgroundColor: ThemeConstants.white,
         appBar: AppBar(
+          centerTitle: false,
           title: RichText(
             text: TextSpan(
               text: 'Whizzy People Counting',

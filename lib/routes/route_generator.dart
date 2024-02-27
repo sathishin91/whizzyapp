@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:whizzy/blocs/dashboard/dashboard_cubit.dart';
 
+import '../blocs/dashboard/dashboard_cubit.dart';
 import '../blocs/login/login_cubit.dart';
 import '../di/get_it.dart';
 import '../presenter/dashboard.dart';
@@ -22,8 +22,15 @@ class RouteGenerator {
         );
       case Routes.loginScreen:
         return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (context) => getItInstance<LoginCubit>(),
+          builder: (_) => MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (context) => getItInstance<LoginCubit>(),
+              ),
+              BlocProvider(
+                create: (context) => getItInstance<DashboardCubit>(),
+              ),
+            ],
             child: const LoginScreen(),
           ),
         );

@@ -15,12 +15,11 @@ class LoginRepository {
   Future<Either<AppError, CustomResponse>> generateCode(
       {required String code}) async {
     try {
-      final response = await _apiClient.postMethod(
-        ApiConstants.serverInfo,
-        params: {
-          "code": code,
-        },
-      );
+      final response = await _apiClient.postMethod(ApiConstants.serverInfo,
+          params: {
+            "code": code,
+          },
+          enableUrl: true);
       CustomResponse customResponse = customResponseFromJson(response);
       return Right(customResponse);
     } on SocketException {

@@ -26,8 +26,8 @@ class RequiredText extends StatelessWidget {
                 ) ??
                 Theme.of(context)
                     .textTheme
-                    .bodyMedium
-                    ?.apply(color: Colors.red),
+                    .bodyMedium!
+                    .apply(color: Colors.red),
           )
         ],
       ),

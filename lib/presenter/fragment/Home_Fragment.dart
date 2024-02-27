@@ -1,15 +1,20 @@
+import 'package:datetime_picker_formfield_new/datetime_picker_formfield.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_rounded_date_picker/flutter_rounded_date_picker.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
+import '../../blocs/dashboard/dashboard_cubit.dart';
 import '../../constants/app_context.dart';
 import '../../constants/constant_export.dart';
+import '../../constants/utilities.dart';
+import '../../models/sensorListDashboard.dart';
 import '../../widgets/custom_button.dart';
+import '../../widgets/loading_widget.dart';
 import '../../widgets/required_text.dart';
 
 class HomeFragment extends StatefulWidget {
@@ -20,12 +25,6 @@ class HomeFragment extends StatefulWidget {
 
   @override
   State<HomeFragment> createState() => _HomeFragmentState();
-}
-
-class ChartData {
-  ChartData(this.x, this.y);
-  final String x;
-  final double y;
 }
 
 class SalesData {
@@ -39,9 +38,23 @@ class _HomeFragmentState extends State<HomeFragment> {
   TextEditingController searchCont = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   DropDownValues? _selectTitle;
+  final format = DateFormat("yyyy/MM/dd");
+  String entryTotal = "";
+  String exitTotal = "";
+  String peakHour = "";
+  String avgDwellTime = "";
+  String maxDwellTime = "";
+  String startTime = "";
+  String endTime = "";
+  String sensorIdValue = "";
   @override
   void initState() {
     super.initState();
+    startTime = getCurrentDateTimeAsString();
+    try {
+      sensorIdValue = AppContext().listDropdown[0].areaId ?? "";
+      callAPIMethod(startTime, startTime, sensorIdValue);
+    } catch (e) {}
   }
 
   @override
@@ -50,228 +63,391 @@ class _HomeFragmentState extends State<HomeFragment> {
     super.dispose();
   }
 
+  String getCurrentDateTimeAsString() {
+    DateTime now = DateTime.now();
+    String formattedDate = DateFormat('yyyyMMddHH').format(now);
+    return "${formattedDate}0000";
+  }
+
+  String getNextDayAsString(DateTime selectedDateTime) {
+    DateTime nextDay = selectedDateTime.add(const Duration(days: 1));
+    String nextDayString = DateFormat('yyyyMMdd').format(nextDay);
+    return "${nextDayString}235959";
+  }
+
+  void callAPIMethod(String sT, String eT, String sId) {
+    context.read<DashboardCubit>().dashboardSensorList(sId, sT, eT);
+  }
+
+  List<ChartData> _convertToChartData(List<HourlyEntry>? hourlyEntry) {
+    List<ChartData> chartDataList = [];
+    if (hourlyEntry != null) {
+      for (HourlyEntry entry in hourlyEntry) {
+        chartDataList.add(ChartData(
+          hour: entry.hour ?? "",
+          inValue: entry.inValue ?? 0,
+          outValue: entry.outValue ?? 0,
+        ));
+      }
+    }
+    return chartDataList;
+  }
+
+  List<ChartData> chartHourEntry = [];
+  List<ChartData> chartHourExit = [];
+  List<ChartData> chartHourOccupancy = [];
+
   @override
   Widget build(BuildContext context) {
-    final List<ChartData> chartData = [
-      ChartData("9hr", 0),
-      ChartData("10hr", 0),
-      ChartData("11hr", 0),
-      ChartData("12hr", 0),
-      ChartData("13hr", 0)
-    ];
-    return Scaffold(
-      backgroundColor: ThemeConstants.white,
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            // 10.height,
-            // GestureDetector(
-            //   onTap: () {
-            //     widget.goToSearch();
-            //   },
-            //   child: AppTextField(
-            //     textFieldType: TextFieldType.NAME,
-            //     enabled: false,
-            //     controller: searchCont,
-            //     decoration: inputSearchDecoration(context, "Search"),
-            //   ).paddingSymmetric(horizontal: 16),
-            // ),
-            10.height,
-            Padding(
-              padding: const EdgeInsets.only(left: 12.0, right: 12.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 50,
-                      child: TextFormField(
-                        decoration: InputDecoration(
-                          hintStyle:
-                              const TextStyle(color: ThemeConstants.grey),
-                          labelStyle:
-                              const TextStyle(color: ThemeConstants.grey),
-                          label: const RequiredText(
-                            label: "DOB",
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                            borderSide: const BorderSide(color: Colors.black),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                            borderSide: const BorderSide(color: Colors.black),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                            borderSide: const BorderSide(color: Colors.black),
-                          ),
-                          hintText: "dd/mm/yyyy",
-                          suffixIcon: Image.asset(
-                            'assets/pngs/calendaricon.png',
-                            width: 24,
-                            height: 24,
-                          ),
-                        ),
-                        readOnly: true,
-                        onTap: () => handleDateOfBirthClick(
-                            dobController: _dobController, context: context),
-                        controller: _dobController,
-                        validator: (value) => value == null || value.isEmpty
-                            ? "Please enter date of birth"
-                            : null,
-                      ),
-                    ),
-                  ),
-                  10.width,
-                  Expanded(
-                    child: SizedBox(
-                      height: 50,
-                      child: DropdownSearch<DropDownValues?>(
-                        items: AppContext()
-                            .listDropdown
-                            .map((item) => DropDownValues(
-                                  value: item.areaId,
-                                  name: item.areaName!,
-                                ))
-                            .toList(),
-                        popupProps: PopupProps.menu(
-                          constraints: const BoxConstraints(
-                            maxHeight: 150,
-                          ),
-                          itemBuilder:
-                              (context, DropDownValues? item, isSelected) =>
-                                  Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: AppSizeConstants.screenVertical,
-                                horizontal: AppSizeConstants.screenHorizontal),
-                            child: Text(
-                              item!.name,
-                              style: _selectTitle == item
-                                  ? Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.apply(
-                                          color: ThemeConstants.primaryColor)
-                                  : Theme.of(context).textTheme.bodyMedium,
+    return BlocConsumer<DashboardCubit, DashboardState>(
+      listener: (context, state) {
+        if (state is DashboardSensorInfoLoaded) {
+          final String l1 = state.dashboardSensorList.entryTotalLastweek!;
+          entryTotal = state.dashboardSensorList.entryTotalLastweek!;
+          exitTotal = state.dashboardSensorList.exitTotalLastweek!;
+          peakHour = state.dashboardSensorList.peakHourLastweek!;
+          avgDwellTime = state.dashboardSensorList.avgDwellTime!;
+          maxDwellTime = state.dashboardSensorList.maxDwellTime!;
+          chartHourEntry =
+              _convertToChartData(state.dashboardSensorList.hourlyEntry);
+          chartHourExit =
+              _convertToChartData(state.dashboardSensorList.hourlyExit);
+          chartHourOccupancy =
+              _convertToChartData(state.dashboardSensorList.hourlyOccupancy);
+        } else if (state is DashboardError) {
+          showErrorToast(
+              appErrorType: state.appErrorType,
+              errorMessage: state.errorMessage);
+        }
+      },
+      builder: (context, state) {
+        return LoadingWidget(
+          showLoading: state is DashboardLoading,
+          child: Scaffold(
+            backgroundColor: ThemeConstants.white,
+            body: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    10.height,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        DropdownSearch<DropDownValues?>(
+                          items: AppContext()
+                              .listDropdown
+                              .map((item) => DropDownValues(
+                                    value: item.areaId,
+                                    name: item.areaName!,
+                                  ))
+                              .toList(),
+                          popupProps: PopupProps.menu(
+                            constraints: const BoxConstraints(
+                              maxHeight: 150,
+                            ),
+                            itemBuilder:
+                                (context, DropDownValues? item, isSelected) =>
+                                    Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: AppSizeConstants.screenVertical,
+                                  horizontal:
+                                      AppSizeConstants.screenHorizontal),
+                              child: Text(
+                                item!.name,
+                                style: _selectTitle == item
+                                    ? Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.apply(
+                                            color: ThemeConstants.primaryColor)
+                                    : Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                            menuProps: const MenuProps(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                  bottom: Radius.circular(
+                                      AppSizeConstants.xtralargeSpacing),
+                                ),
+                              ),
                             ),
                           ),
-                          menuProps: const MenuProps(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                bottom: Radius.circular(
-                                    AppSizeConstants.xtralargeSpacing),
+                          validator: (value) =>
+                              value == null ? AppConstants.selectTitle : null,
+                          onChanged: (DropDownValues? value) {
+                            _selectTitle = value;
+                            sensorIdValue = _selectTitle!.value;
+                            callAPIMethod(startTime, endTime, sensorIdValue);
+                          },
+                          selectedItem: _selectTitle,
+                          itemAsString: (DropDownValues? item) => item!.name,
+                          dropdownDecoratorProps: DropDownDecoratorProps(
+                            dropdownSearchDecoration:
+                                AppStyles.customInputDecoration(
+                              context,
+                              label: const RequiredText(
+                                label: AppConstants.selectTitle,
                               ),
                             ),
                           ),
                         ),
-                        validator: (value) =>
-                            value == null ? AppConstants.selectTitle : null,
-                        onChanged: (DropDownValues? value) {
-                          _selectTitle = value;
-                        },
-                        selectedItem: _selectTitle,
-                        itemAsString: (DropDownValues? item) => item!.name,
-                        dropdownDecoratorProps: DropDownDecoratorProps(
-                          dropdownSearchDecoration:
-                              AppStyles.customInputDecoration(
-                            context,
+                        20.height,
+                        DateTimeField(
+                          decoration: InputDecoration(
+                            hintStyle: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(color: ThemeConstants.grey),
+                            labelStyle: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(color: ThemeConstants.grey),
                             label: const RequiredText(
-                              label: AppConstants.selectTitle,
+                              label: "Choose Date",
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide:
+                                  const BorderSide(color: ThemeConstants.black),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide:
+                                  const BorderSide(color: ThemeConstants.black),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide:
+                                  const BorderSide(color: ThemeConstants.black),
+                            ),
+                            hintText: "dd/mm/yyyy",
+                            suffixIcon: Image.asset(
+                              'assets/pngs/calendaricon.png',
+                              width: 24,
+                              height: 24,
                             ),
                           ),
+                          format: format,
+                          onShowPicker: (context, currentValue) async {
+                            final selectedDate = await showDatePicker(
+                              context: context,
+                              firstDate: DateTime(1900),
+                              initialDate: currentValue ?? DateTime.now(),
+                              lastDate: DateTime(2100),
+                            );
+                            if (selectedDate != null) {
+                              // final selectedTime = await showTimePicker(
+                              //   context: context,
+                              //   initialTime: TimeOfDay.fromDateTime(
+                              //       currentValue ?? DateTime.now()),
+                              // );
+                              // if (selectedTime != null) {
+                              final selectedDateTime = DateTime(
+                                selectedDate.year,
+                                selectedDate.month,
+                                selectedDate.day,
+                              );
+                              final formatDate = DateFormat('yyyyMMddHH')
+                                  .format(selectedDateTime);
+                              startTime = "${formatDate}0000";
+                              endTime = getNextDayAsString(selectedDateTime);
+                              callAPIMethod(startTime, endTime, sensorIdValue);
+                              return selectedDateTime;
+                              // }
+                            }
+                            // Return the currentValue if the user cancels
+                            return currentValue;
+                          },
                         ),
-                      ),
+                      ],
                     ),
-                  ),
-                ],
+                    15.height,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        cardWidget(entryTotal, "Entry Total\nLast Week ",
+                            ThemeConstants.entryTotalColorCode),
+                        cardWidget(exitTotal, "Exit Total\nLast Week ",
+                            ThemeConstants.exitTotalColorCode),
+                      ],
+                    ),
+                    10.height,
+                    Row(
+                      children: [
+                        cardWidget(peakHour, "Peak Hour\nLast Week ",
+                            ThemeConstants.peakHourColorCode),
+                        cardWidgetDwellTime(
+                            "\nAvgDwellTime: $avgDwellTime",
+                            "MaxDwellTime: $maxDwellTime ",
+                            ThemeConstants.avgDwellTimeColorCode),
+                      ],
+                    ),
+                    10.height,
+                    SfCartesianChart(
+                      title: ChartTitle(
+                        text: 'Hourly Entry',
+                        alignment: ChartAlignment.near,
+                      ),
+                      primaryXAxis: CategoryAxis(
+                        majorGridLines: const MajorGridLines(width: 0),
+                        majorTickLines: const MajorTickLines(width: 0),
+                        interval: 0.2,
+                      ),
+                      primaryYAxis: NumericAxis(
+                        axisLine: const AxisLine(width: 2),
+                        majorGridLines: const MajorGridLines(width: 1),
+                        majorTickLines: const MajorTickLines(size: 5),
+                        minimum: 0,
+                        maximum: 400,
+                        interval: 50,
+                      ),
+                      series: <CartesianSeries<ChartData, String>>[
+                        ColumnSeries<ChartData, String>(
+                          width: 0.5,
+                          spacing: 0.2,
+                          dataSource: chartHourEntry,
+                          xValueMapper: (ChartData data, _) =>
+                              "${data.hour.toString()}hr",
+                          yValueMapper: (ChartData data, _) => data.inValue,
+                        ),
+                        ColumnSeries<ChartData, String>(
+                          width: 0.5,
+                          spacing: 0.2,
+                          dataSource: chartHourEntry,
+                          xValueMapper: (ChartData data, _) =>
+                              "${data.hour.toString()}hr",
+                          yValueMapper: (ChartData data, _) => data.outValue,
+                        ),
+                      ],
+                    ),
+                    20.height,
+                    SfCartesianChart(
+                      title: ChartTitle(
+                        text: 'Hourly Exit',
+                        alignment: ChartAlignment.near,
+                      ),
+                      primaryXAxis: CategoryAxis(
+                        majorGridLines: const MajorGridLines(width: 0),
+                        majorTickLines: const MajorTickLines(width: 0),
+                        interval: 0.2,
+                      ),
+                      primaryYAxis: NumericAxis(
+                        axisLine: const AxisLine(width: 2),
+                        majorGridLines: const MajorGridLines(width: 1),
+                        majorTickLines: const MajorTickLines(size: 5),
+                        minimum: 0,
+                        maximum: 400,
+                        interval: 50,
+                      ),
+                      series: <CartesianSeries<ChartData, String>>[
+                        ColumnSeries<ChartData, String>(
+                          width: 0.5,
+                          spacing: 0.2,
+                          dataSource: chartHourExit,
+                          xValueMapper: (ChartData data, _) =>
+                              "${data.hour.toString()}hr",
+                          yValueMapper: (ChartData data, _) => data.inValue,
+                        ),
+                        ColumnSeries<ChartData, String>(
+                          width: 0.5,
+                          spacing: 0.2,
+                          dataSource: chartHourExit,
+                          xValueMapper: (ChartData data, _) =>
+                              "${data.hour.toString()}hr",
+                          yValueMapper: (ChartData data, _) => data.outValue,
+                        ),
+                      ],
+                    ),
+                    20.height,
+                    SfCartesianChart(
+                      title: ChartTitle(
+                        text: 'Hourly Occupancy',
+                        alignment: ChartAlignment.near,
+                      ),
+                      primaryXAxis: CategoryAxis(
+                        majorGridLines: const MajorGridLines(width: 0),
+                        majorTickLines: const MajorTickLines(width: 0),
+                        interval: 0.2,
+                      ),
+                      primaryYAxis: NumericAxis(
+                        axisLine: const AxisLine(width: 2),
+                        majorGridLines: const MajorGridLines(width: 1),
+                        majorTickLines: const MajorTickLines(size: 5),
+                        minimum: 0,
+                        maximum: 400,
+                        interval: 50,
+                      ),
+                      series: <CartesianSeries<ChartData, String>>[
+                        ColumnSeries<ChartData, String>(
+                          width: 0.5,
+                          spacing: 0.2,
+                          dataSource: chartHourOccupancy,
+                          xValueMapper: (ChartData data, _) =>
+                              "${data.hour.toString()}hr",
+                          yValueMapper: (ChartData data, _) => data.inValue,
+                        ),
+                        ColumnSeries<ChartData, String>(
+                          width: 0.5,
+                          spacing: 0.2,
+                          dataSource: chartHourOccupancy,
+                          xValueMapper: (ChartData data, _) =>
+                              "${data.hour.toString()}hr",
+                          yValueMapper: (ChartData data, _) => data.outValue,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-            15.height,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                cardWidget("Entry Total ", "Last Week "),
-                cardWidget("Exit Total ", "Last Week "),
-              ],
-            ),
-            10.height,
-            Row(
-              children: [
-                cardWidget("Peak Hour ", "Last Week "),
-                cardWidget("AvgDwellTime ", "MaxDwellTime "),
-              ],
-            ),
-            SfCartesianChart(
-              title: ChartTitle(
-                text: 'Hourly Entry',
-                alignment: ChartAlignment.near,
-              ),
-              primaryXAxis: CategoryAxis(
-                  // title: AxisTitle(text: "Month"),
-                  ),
-              series: <CartesianSeries<ChartData, String>>[
-                ColumnSeries<ChartData, String>(
-                    width: 0.5,
-                    spacing: 0.2,
-                    dataSource: chartData,
-                    xValueMapper: (ChartData data, _) => data.x.toString(),
-                    yValueMapper: (ChartData data, _) => data.y)
-              ],
-            ),
-            10.height,
-            SfCartesianChart(
-              title: ChartTitle(
-                text: 'Hourly Exit',
-                alignment: ChartAlignment.near,
-              ),
-              primaryXAxis: CategoryAxis(
-                  // title: AxisTitle(text: "Month"),
-                  ),
-              series: <CartesianSeries<ChartData, String>>[
-                ColumnSeries<ChartData, String>(
-                    width: 0.5,
-                    spacing: 0.2,
-                    dataSource: chartData,
-                    xValueMapper: (ChartData data, _) => data.x.toString(),
-                    yValueMapper: (ChartData data, _) => data.y)
-              ],
-            ),
-            10.height,
-            SfCartesianChart(
-              title: ChartTitle(
-                text: 'Hourly Occupancy',
-                alignment: ChartAlignment.near,
-              ),
-              primaryXAxis: CategoryAxis(
-                  // title: AxisTitle(text: "Month"),
-                  ),
-              series: <CartesianSeries<ChartData, String>>[
-                ColumnSeries<ChartData, String>(
-                    width: 0.5,
-                    spacing: 0.2,
-                    dataSource: chartData,
-                    xValueMapper: (ChartData data, _) => data.x.toString(),
-                    yValueMapper: (ChartData data, _) => data.y)
-              ],
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  Widget cardWidget(String text1, String text2) => Expanded(
+  Widget cardWidget(String amt, String text2, Color cardColor) => Expanded(
         child: Card(
+          elevation: 2,
+          color: cardColor,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(8.0)),
           ),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  amt,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium!
+                      .copyWith(fontWeight: FontWeight.bold),
+                ),
+                15.height,
+                Text(text2),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  Widget cardWidgetDwellTime(String text1, String text2, Color cardColor) =>
+      Expanded(
+        child: Card(
+          elevation: 2,
+          color: cardColor,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8.0)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(text1),
                 15.height,
@@ -282,60 +458,6 @@ class _HomeFragmentState extends State<HomeFragment> {
         ),
       );
 
-  void handleDateOfBirthClick(
-      {required TextEditingController dobController,
-      required BuildContext context}) async {
-    DateTime? initialDate = dobController.text.isEmpty
-        ? null
-        : DateFormat('dd/MM/yyyy').parse(dobController.text);
-    DateTime? selectedDate = await showRoundedDatePicker(
-      context: context,
-      borderRadius: 24,
-      height: 300,
-      initialDate: initialDate ?? DateTime(DateTime.now().year - 18),
-      lastDate: DateTime(DateTime.now().year),
-      firstDate: DateTime(DateTime.now().year - 100),
-      initialDatePickerMode: DatePickerMode.day,
-      background: Colors.grey.withOpacity(0.5),
-      styleDatePicker: MaterialRoundedDatePickerStyle(
-        decorationDateSelected: const BoxDecoration(
-          color: ThemeConstants.primaryColor,
-          borderRadius: BorderRadius.all(
-            Radius.circular(12),
-          ),
-        ),
-        textStyleCurrentDayOnCalendar: const TextStyle(
-          color: Colors.green,
-        ),
-      ),
-      theme: ThemeData(
-        primaryColor: ThemeConstants.primaryColor,
-        textTheme: const TextTheme(
-          titleMedium: TextStyle(
-            color: ThemeConstants.primaryColor,
-          ),
-          bodyMedium: TextStyle(color: Colors.black),
-          bodySmall: TextStyle(color: Colors.green),
-        ),
-        disabledColor: Colors.red.withOpacity(0.5),
-      ),
-    );
-    if (selectedDate != null) {
-      dobController.text = DateFormat("dd/MM/yyyy").format(selectedDate);
-      setState(() {});
-    }
-  }
-
-// ListView.builder(
-//     itemCount: 5,
-//     itemBuilder: (BuildContext context, int index) {
-//       return Column(
-//         children: const [
-//           JobDetailsCard(),
-//         ],
-//       );
-//     },
-//   ),
   Container logoEndCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12.0),
@@ -573,4 +695,13 @@ class _HomeFragmentState extends State<HomeFragment> {
       },
     );
   }
+}
+
+class ChartData {
+  final String hour;
+  final int inValue;
+  final int outValue;
+
+  ChartData(
+      {required this.hour, required this.inValue, required this.outValue});
 }

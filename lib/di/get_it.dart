@@ -1,7 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart';
-import 'package:whizzy/blocs/dashboard/dashboard_cubit.dart';
 
+import '../blocs/dashboard/dashboard_cubit.dart';
 import '../blocs/login/login_cubit.dart';
 import '../core/api_client.dart';
 import '../repository/dashboard_repository.dart';

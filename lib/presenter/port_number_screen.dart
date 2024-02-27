@@ -39,7 +39,7 @@ class _PortNumberScreenState extends State<PortNumberScreen> {
                 child: Column(
                   children: [
                     TextFormField(
-                      decoration: inputDecoration('IP Address'),
+                      decoration: inputDecoration(context, 'IP Address'),
                       // controller: _emailController,
                       keyboardType: TextInputType.text,
                       validator: (value) {
@@ -51,7 +51,7 @@ class _PortNumberScreenState extends State<PortNumberScreen> {
                     ),
                     Gap(20.h),
                     TextFormField(
-                      decoration: inputDecoration('Port Number'),
+                      decoration: inputDecoration(context, 'Port Number'),
                       // controller: _emailController,
                       keyboardType: TextInputType.number,
                       validator: (value) {

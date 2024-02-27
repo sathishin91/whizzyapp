@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:whizzy/core/preference_helper.dart';
 
-import '../../constants/theme_constants.dart';
+import '../../constants/constant_export.dart';
+import '../../core/preference_helper.dart';
 import '../../routes/route_generator.dart';
 
 class ProfileFragment extends StatefulWidget {
@@ -32,12 +32,13 @@ class _ProfileFragmentState extends State<ProfileFragment> {
               ),
             ),
             Container(
-              margin: const EdgeInsets.all(12),
+              margin: const EdgeInsets.all(6),
               width: double.infinity,
               child: Card(
+                color: ThemeConstants.primaryColor.withOpacity(0.3),
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(
-                    Radius.circular(12),
+                    Radius.circular(6),
                   ),
                 ),
                 elevation: 0,
@@ -88,12 +89,26 @@ class _ProfileFragmentState extends State<ProfileFragment> {
                           size: 24,
                           color: grey,
                         ),
+                        10.width,
                         Text("Logout",
                             style: Theme.of(context).textTheme.bodySmall),
                       ],
                     )),
                   ),
                 ],
+              ),
+            ),
+            15.height,
+            const Divider(),
+            15.height,
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: Text("Version 1.0.0",
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall!
+                        .copyWith(fontSize: 11.5)),
               ),
             ),
           ],
@@ -127,19 +142,25 @@ class _ProfileDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.5, horizontal: 5),
+      padding: const EdgeInsets.symmetric(
+          vertical: AppSizeConstants.screenVertical,
+          horizontal: AppSizeConstants.screenHorizontal),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(title, style: Theme.of(context).textTheme.bodySmall!.copyWith()),
+          Text(title,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleSmall!
+                  .copyWith(fontWeight: FontWeight.bold)),
           for (var element in valueList)
             if (element != "")
               Container(
                 decoration: const BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: Colors.grey,
+                      color: ThemeConstants.grey,
                       width: 1.0,
                     ),
                   ),
@@ -150,7 +171,7 @@ class _ProfileDetails extends StatelessWidget {
                   style: Theme.of(context)
                       .textTheme
                       .bodySmall!
-                      .copyWith(color: Colors.black),
+                      .copyWith(color: ThemeConstants.black),
                 ),
               ),
         ],
