@@ -5,6 +5,7 @@ import 'package:dartz/dartz.dart';
 import '../constants/api_constants.dart';
 import '../core/api_client.dart';
 import '../core/app_error.dart';
+import '../fcm.dart';
 import '../models/custom_response_model.dart';
 
 class LoginRepository {
@@ -37,6 +38,7 @@ class LoginRepository {
         params: {
           "email": email,
           "password": password,
+          "token": appToken,
         },
       );
       CustomResponse customResponse = customResponseFromJson(response);

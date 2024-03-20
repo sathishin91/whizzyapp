@@ -11,7 +11,7 @@ class AppTheme {
     // double screenWidth = MediaQuery.of(context).size.width;
     // double fontSize = screenWidth >= 600 ? 24.0 : 16.0;
     final MediaQueryData mediaQueryData =
-        MediaQueryData.fromWindow(WidgetsBinding.instance.window);
+        MediaQueryData.fromView(WidgetsBinding.instance.window);
     double deviceSize = mediaQueryData.size.width;
     return ThemeData(
       primarySwatch: ThemeConstants.primaryColorSwatch,
@@ -53,7 +53,7 @@ class AppTheme {
         primarySwatch: ThemeConstants.primaryColorSwatch,
         visualDensity: VisualDensity.adaptivePlatformDensity,
         appBarTheme: Theme.of(context).appBarTheme.copyWith(
-            backgroundColor: Colors.transparent,
+            backgroundColor: ThemeConstants.white,
             centerTitle: true,
             elevation: 0,
             titleTextStyle: ThemeConstants.appFont,

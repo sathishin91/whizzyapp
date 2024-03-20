@@ -1,3 +1,4 @@
+import 'package:WHIZZYPCS/widgets/notification_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -42,10 +43,10 @@ class RouteGenerator {
           ),
         );
 
-      // case Routes.termsandconditions:
-      //   return MaterialPageRoute(
-      //     builder: (_) => const TermsAndConditions(),
-      //   );
+      case Routes.notificationView:
+        return MaterialPageRoute(
+          builder: (_) => const NotificationCardWidget(),
+        );
       // case Routes.forgetpassword:
       //   return MaterialPageRoute(
       //     builder: (_) => const ForgetPassword(),
@@ -113,4 +114,6 @@ class Routes {
 
   //apply job
   static const String applyJob = "applyJob";
+
+  static const String notificationView = "notificationView";
 }

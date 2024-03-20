@@ -139,11 +139,14 @@ class _DashboardState extends State<Dashboard> {
         ),
         body: pages.elementAt(selectedIndex),
         bottomNavigationBar: BottomAppBar(
+          color: ThemeConstants.white,
+          height: 70,
           clipBehavior: Clip.hardEdge,
+          elevation: 2,
           shape: const CircularNotchedRectangle(),
           notchMargin: 10,
           child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 6),
+            margin: const EdgeInsets.symmetric(vertical: 0),
             child: Row(
               children: [
                 ...List.generate(
@@ -156,7 +159,8 @@ class _DashboardState extends State<Dashboard> {
                         selectedIndex == index
                             ? Icon(data.icon, size: 24, color: data.colors)
                             : Icon(data.alternateIcon,
-                                size: 24, color: Colors.blueGrey[300]),
+                                size: 24,
+                                color: const Color.fromARGB(255, 3, 7, 8)),
                         Text(
                           data.title.validate(),
                           style:

@@ -53,6 +53,8 @@ class LoginCubit extends Cubit<LoginState> {
             )), (r) {
       if (r.success) {
         if (r.data != null) {
+          final userId = r.data['userId'];
+          PreferenceHelper.saveUserId(userId);
           PreferenceHelper.saveUpdateCheckIfAccountCreated(true);
           emit(const LoginInfoLoaded());
         } else {

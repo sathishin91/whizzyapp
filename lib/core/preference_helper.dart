@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class PreferenceHelper {
   static const String _baseUrl = "_baseUrl";
   static const String _email = "_email";
+  static const String _userId = "_userId";
   static const String _checkIfAccountCreated = "_checkIfAccountCreated";
 
   static void saveBaseUrl(String value) => _saveString(_baseUrl, value);
@@ -12,6 +13,10 @@ class PreferenceHelper {
   static void saveEmail(String value) => _saveString(_email, value);
 
   static Future<String?> getEmail() async => _getString(_email);
+
+  static void saveUserId(String value) => _saveString(_userId, value);
+
+  static Future<String?> getUserId() async => _getString(_userId);
 
   ///Used to save/update account created
   static void saveUpdateCheckIfAccountCreated(bool value) =>

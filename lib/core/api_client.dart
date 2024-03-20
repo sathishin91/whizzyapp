@@ -46,7 +46,7 @@ class ApiClient {
   dynamic postMethodReport(String path, {required String body}) async {
     final apiUrl = AppContext().baseUrl + path;
 
-    debugLog("Appurl -============-- $path");
+    debugLog("Appurl -============-- $apiUrl");
     debugLog("jsonbodyjsonBody -============-- $body");
     final response = await http.post(
       Uri.parse(apiUrl),

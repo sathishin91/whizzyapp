@@ -19,4 +19,9 @@ class ApiConstants {
 
   static String reportSensorList = "/api/data/m/sensor/dataList/area/";
   // "${ApiConstants.reportSensorList}76d2c0fd-e29f-4b1c-9753-0c7ee7f5fe10/20231201090000/20231201225959/timezoneMinute/480/frequencyMinute/60",
+
+  //notification all
+  static String notificationAll = "/api/pushnotilog/notification/listall/";
+
+  static String notificationSingle = "/api/pushnotilog/notification/list/";
 }

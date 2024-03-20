@@ -58,3 +58,11 @@ class SensorDataInfoLoaded extends DashboardState {
   @override
   List<Object> get props => [sensorData];
 }
+
+class NotificationInfoLoaded extends DashboardState {
+  final List<NotificationAll> notificationAll;
+  const NotificationInfoLoaded({required this.notificationAll}) : super();
+
+  @override
+  List<Object> get props => [notificationAll];
+}

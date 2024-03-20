@@ -58,8 +58,88 @@ class DashboardRepository {
       String jsonString = jsonEncode(optionData);
 
       final response = await _apiClient.postMethodReport(
-        "${ApiConstants.reportSensorList}$sensorId/$startTime/$endTime/timezoneMinute/480/frequencyMinute/60",
+        "${ApiConstants.reportSensorList}$sensorId/$startTime/$endTime/timezoneMinute/480/frequencyMinute/1440",
         body: jsonString,
+      );
+      CustomResponse customResponse = customResponseFromJson(response);
+      return Right(customResponse);
+    } on SocketException {
+      return const Left(AppError(AppErrorType.network));
+    } on Exception {
+      return const Left(AppError(AppErrorType.api));
+    }
+  }
+
+  Future<Either<AppError, CustomResponse>> generateNotificationAll(
+      {required String userId}) async {
+    String res = '''{
+    "status": "OK",
+    "message": null,
+    "data": [
+        {
+            "alertId": "A004",
+            "alertTitle": "No Entry Alert",
+            "areaId": "d65ac0a1-a0d0-473c-b3a7-38e9a965106e",
+            "areaName": null,
+            "persons": [
+                {
+                    "email": "test@email.com"
+                }
+            ],
+            "status": 1,
+            "alertType": "NO-ENTRY",
+            "alertIndex": 15,
+            "frequencyIndex": 51,
+            "templateCode": "T-E-007"
+        },
+        {
+            "alertId": "A0045",
+            "alertTitle": "No Alert",
+            "areaId": "d65ac0a1-a0d0-473c-b3a7-38e9a965106e",
+            "areaName": null,
+            "persons": [
+                {
+                    "email": "test@email.com"
+                },
+                {
+                    "email": "rock@email.com"
+                }
+            ],
+            "status": 1,
+            "alertType": "NO-ENTRY",
+            "alertIndex": 15,
+            "frequencyIndex": 51,
+            "templateCode": "T-E-007"
+        },
+        {
+            "alertId": "A006",
+            "alertTitle": "Entry Alert",
+            "areaId": "d65ac0a1-a0d0-473c-b3a7-38e9a965106e",
+            "areaName": null,
+            "persons": [
+                {
+                    "email": "test@email.com"
+                },
+                {
+                    "email": "web@email.com"
+                },
+                {
+                    "email": "rajeshkumar@email.com"
+                }
+            ],
+            "status": 1,
+            "alertType": "NO-ENTRY",
+            "alertIndex": 15,
+            "frequencyIndex": 51,
+            "templateCode": "T-E-007"
+        }
+    ]
+} ''';
+
+    try {
+      final response = await _apiClient.postMethodReport(
+        "${ApiConstants.notificationAll}$userId",
+        body: "",
       );
       CustomResponse customResponse = customResponseFromJson(response);
       return Right(customResponse);

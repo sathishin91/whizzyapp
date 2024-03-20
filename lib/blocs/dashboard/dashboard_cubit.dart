@@ -1,3 +1,4 @@
+import 'package:WHIZZYPCS/models/notify_model.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -142,6 +143,41 @@ class DashboardCubit extends Cubit<DashboardState> {
           // Assuming a single object
           final listData = SensorData.fromJson(r.data);
           emit(SensorDataInfoLoaded(sensorData: listData));
+        } else {
+          emit(DashboardError(
+              appErrorType: AppErrorType.api, errorMessage: r.data));
+        }
+      } else {
+        emit(DashboardError(
+            appErrorType: AppErrorType.api, errorMessage: r.data));
+      }
+    });
+  }
+
+  void notificationListAll(
+    String userId,
+  ) async {
+    emit(DashboardLoading());
+    final Either<AppError, CustomResponse> response =
+        await _dashboardRepository.generateNotificationAll(userId: userId);
+    response.fold(
+        (l) => emit(DashboardError(
+              appErrorType: l.appErrorType,
+            )), (r) {
+      if (r.success) {
+        if (r.data != null) {
+          // Assuming a single object
+          final List<dynamic> dataList = r.data;
+          final List<NotificationAll> notificationAllList =
+              dataList.map((item) {
+            if (item is Map<String, dynamic>) {
+              return NotificationAll.fromJson(item);
+            } else {
+              throw FormatException("Invalid data format: $item");
+            }
+          }).toList();
+          emit(NotificationInfoLoaded(notificationAll: notificationAllList));
+          print("object");
         } else {
           emit(DashboardError(
               appErrorType: AppErrorType.api, errorMessage: r.data));

@@ -104,6 +104,7 @@ class _HomeFragmentState extends State<HomeFragment> {
         if (state is DashboardSensorInfoLoaded) {
           final String l1 = state.dashboardSensorList.entryTotalLastweek!;
           entryTotal = state.dashboardSensorList.entryTotalLastweek!;
+          print("entry Total $entryTotal");
           exitTotal = state.dashboardSensorList.exitTotalLastweek!;
           peakHour = state.dashboardSensorList.peakHourLastweek!;
           avgDwellTime = state.dashboardSensorList.avgDwellTime!;
@@ -252,8 +253,11 @@ class _HomeFragmentState extends State<HomeFragment> {
                               );
                               final formatDate = DateFormat('yyyyMMddHH')
                                   .format(selectedDateTime);
+                              final endDate = DateFormat('yyyyMMdd')
+                                  .format(selectedDateTime);
                               startTime = "${formatDate}0000";
-                              endTime = getNextDayAsString(selectedDateTime);
+                              endTime =
+                                  "${endDate}235959"; //getNextDayAsString(selectedDateTime);
                               callAPIMethod(startTime, endTime, sensorIdValue);
                               return selectedDateTime;
                               // }
@@ -308,6 +312,7 @@ class _HomeFragmentState extends State<HomeFragment> {
                         ColumnSeries<ChartData, String>(
                           width: 0.5,
                           spacing: 0.2,
+                          color: Colors.grey.withOpacity(0.5),
                           dataSource: chartHourEntry,
                           xValueMapper: (ChartData data, _) =>
                               "${data.hour.toString()}hr",
@@ -316,12 +321,22 @@ class _HomeFragmentState extends State<HomeFragment> {
                         ColumnSeries<ChartData, String>(
                           width: 0.5,
                           spacing: 0.2,
+                          color: Colors.blue.withOpacity(0.5),
                           dataSource: chartHourEntry,
                           xValueMapper: (ChartData data, _) =>
                               "${data.hour.toString()}hr",
                           yValueMapper: (ChartData data, _) => data.outValue,
                         ),
                       ],
+                      trackballBehavior: TrackballBehavior(
+                        enable: true,
+                        activationMode: ActivationMode.singleTap,
+                        tooltipSettings: const InteractiveTooltip(enable: true),
+                        markerSettings: const TrackballMarkerSettings(
+                          markerVisibility: TrackballVisibilityMode.visible,
+                        ),
+                        lineType: TrackballLineType.vertical,
+                      ),
                     ),
                     20.height,
                     SfCartesianChart(
@@ -346,6 +361,7 @@ class _HomeFragmentState extends State<HomeFragment> {
                         ColumnSeries<ChartData, String>(
                           width: 0.5,
                           spacing: 0.2,
+                          color: Colors.grey.withOpacity(0.5),
                           dataSource: chartHourExit,
                           xValueMapper: (ChartData data, _) =>
                               "${data.hour.toString()}hr",
@@ -354,12 +370,22 @@ class _HomeFragmentState extends State<HomeFragment> {
                         ColumnSeries<ChartData, String>(
                           width: 0.5,
                           spacing: 0.2,
+                          color: Colors.pink.withOpacity(0.5),
                           dataSource: chartHourExit,
                           xValueMapper: (ChartData data, _) =>
                               "${data.hour.toString()}hr",
                           yValueMapper: (ChartData data, _) => data.outValue,
                         ),
                       ],
+                      trackballBehavior: TrackballBehavior(
+                        enable: true,
+                        activationMode: ActivationMode.singleTap,
+                        tooltipSettings: const InteractiveTooltip(enable: true),
+                        markerSettings: const TrackballMarkerSettings(
+                          markerVisibility: TrackballVisibilityMode.visible,
+                        ),
+                        lineType: TrackballLineType.vertical,
+                      ),
                     ),
                     20.height,
                     SfCartesianChart(
@@ -384,6 +410,7 @@ class _HomeFragmentState extends State<HomeFragment> {
                         ColumnSeries<ChartData, String>(
                           width: 0.5,
                           spacing: 0.2,
+                          color: Colors.grey.withOpacity(0.5),
                           dataSource: chartHourOccupancy,
                           xValueMapper: (ChartData data, _) =>
                               "${data.hour.toString()}hr",
@@ -392,12 +419,22 @@ class _HomeFragmentState extends State<HomeFragment> {
                         ColumnSeries<ChartData, String>(
                           width: 0.5,
                           spacing: 0.2,
+                          color: Colors.yellow,
                           dataSource: chartHourOccupancy,
                           xValueMapper: (ChartData data, _) =>
                               "${data.hour.toString()}hr",
                           yValueMapper: (ChartData data, _) => data.outValue,
                         ),
                       ],
+                      trackballBehavior: TrackballBehavior(
+                        enable: true,
+                        activationMode: ActivationMode.singleTap,
+                        tooltipSettings: const InteractiveTooltip(enable: true),
+                        markerSettings: const TrackballMarkerSettings(
+                          markerVisibility: TrackballVisibilityMode.visible,
+                        ),
+                        lineType: TrackballLineType.vertical,
+                      ),
                     ),
                   ],
                 ),
@@ -671,6 +708,9 @@ class _HomeFragmentState extends State<HomeFragment> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ThemeConstants.primaryColor,
+                        ),
                         onPressed: () {
                           setState(() {
                             selectedOptions.clear();
@@ -679,6 +719,9 @@ class _HomeFragmentState extends State<HomeFragment> {
                         child: Text('Clear'),
                       ),
                       ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ThemeConstants.primaryColor,
+                        ),
                         onPressed: () {
                           // Apply your filter logic here
                           Navigator.pop(context); // Close the modal sheet

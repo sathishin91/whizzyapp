@@ -219,6 +219,10 @@ class _ReportFragmentState extends State<ReportFragment> {
                                   width:
                                       MediaQuery.of(context).size.width * 0.7,
                                   child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          ThemeConstants.primaryColor,
+                                    ),
                                     onPressed: () {
                                       if (startTimeReport != "" &&
                                           endTimeReport != "") {
@@ -259,6 +263,9 @@ class _ReportFragmentState extends State<ReportFragment> {
                         ? Align(
                             alignment: Alignment.topRight,
                             child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: ThemeConstants.primaryColor,
+                              ),
                               onPressed: () {
                                 showDialog(
                                   context: context,
@@ -303,19 +310,19 @@ class _ReportFragmentState extends State<ReportFragment> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
-        columns: [
-          const DataColumn(label: Text('Sensor Name'), tooltip: 'report title'),
-          const DataColumn(label: Text('Date'), tooltip: 'hours'),
-          DataColumn(
-            label: const Text('Hour'),
-            onSort: (columnIndex, ascending) {
-              _toggleSort(columnIndex);
-            },
-          ),
+        columns: const [
+          DataColumn(label: Text('Sensor Name'), tooltip: 'report title'),
+          DataColumn(label: Text('Date'), tooltip: 'hours'),
+          // DataColumn(
+          //   label: const Text('Hour'),
+          //   onSort: (columnIndex, ascending) {
+          //     _toggleSort(columnIndex);
+          //   },
+          // ),
           DataColumn(
               label: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
-                children: const [
+                children: [
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text("IN"),
@@ -334,7 +341,7 @@ class _ReportFragmentState extends State<ReportFragment> {
                 return DataRow(cells: [
                   DataCell(Text(hourlyValue.sensorName!)),
                   DataCell(Text(getDateTimeList(hourlyValue.timeStamp!))),
-                  DataCell(Text(hourlyValue.hour!)),
+                  // DataCell(Text(hourlyValue.hour!)),
                   DataCell(
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -380,18 +387,18 @@ class _ReportFragmentState extends State<ReportFragment> {
   }
 
   final List<DataColumn> columns = [
-    DataColumn(label: Text('Sensor Name'), tooltip: 'report title'),
-    DataColumn(
+    const DataColumn(label: Text('Sensor Name'), tooltip: 'report title'),
+    const DataColumn(
       label: Text('Date'),
     ),
-    DataColumn(
-      label: Text('Hour'),
-    ),
+    // const DataColumn(
+    //   label: Text('Hour'),
+    // ),
     // DataColumn(label: Text('Hour'), tooltip: 'hours'),
-    DataColumn(
+    const DataColumn(
         label: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: const [
+          children: [
             Align(
               alignment: Alignment.centerLeft,
               child: Text("IN"),

@@ -55,7 +55,7 @@ class ThemeConstants {
 
   static double get textScaleFactor {
     final MediaQueryData mediaQueryData =
-        MediaQueryData.fromWindow(WidgetsBinding.instance.window);
+        MediaQueryData.fromView(WidgetsBinding.instance.window);
     final devicePixelRatio = mediaQueryData.devicePixelRatio;
     // Set your desired reference DPI (usually 160, which corresponds to mdpi)
     const referenceDPI = 3.0;
