@@ -50,15 +50,12 @@ dependencies:
   dropdown_search: ^5.0.2
   syncfusion_flutter_charts: ^19.4.56
   shared_preferences: ^2.0.16
-  custom_date_range_picker: ^1.0.6
   datetime_picker_formfield_new: ^2.1.0
   calendar_date_picker2: ^0.5.3
-  date_range_form_field: ^1.0.2  
   firebase_core: ^2.27.1
   firebase_messaging: ^14.7.20
   firebase_crashlytics: ^3.4.19
   flutter_local_notifications: ^17.0.0
-  flutter_smart_dialog: ^4.9.6
   aligned_dialog: ^0.0.7
 
 dev_dependencies:
