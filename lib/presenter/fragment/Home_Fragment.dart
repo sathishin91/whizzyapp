@@ -13,7 +13,6 @@ import '../../constants/app_context.dart';
 import '../../constants/constant_export.dart';
 import '../../constants/utilities.dart';
 import '../../models/sensorListDashboard.dart';
-import '../../widgets/custom_button.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/required_text.dart';
 
@@ -21,7 +20,6 @@ class HomeFragment extends StatefulWidget {
   final VoidCallback goToSearch;
 
   const HomeFragment(this.goToSearch, {super.key});
-  // const HomeFragment({required this.goToSearch}) : super(key: key);
 
   @override
   State<HomeFragment> createState() => _HomeFragmentState();
@@ -40,8 +38,11 @@ class _HomeFragmentState extends State<HomeFragment> {
   DropDownValues? _selectTitle;
   final format = DateFormat("yyyy/MM/dd");
   String entryTotal = "";
+  String entryTotalCurrent = "";
   String exitTotal = "";
+  String exitTotalCurrent = "";
   String peakHour = "";
+  String peakHourCurrent = "";
   String avgDwellTime = "";
   String maxDwellTime = "";
   String startTime = "";
@@ -51,10 +52,8 @@ class _HomeFragmentState extends State<HomeFragment> {
   void initState() {
     super.initState();
     startTime = getCurrentDateTimeAsString();
-    try {
-      sensorIdValue = AppContext().listDropdown[0].areaId ?? "";
-      callAPIMethod(startTime, startTime, sensorIdValue);
-    } catch (e) {}
+    endTime = getLastWeekInitial();
+    context.read<DashboardCubit>().loadDropdownList();
   }
 
   @override
@@ -65,18 +64,41 @@ class _HomeFragmentState extends State<HomeFragment> {
 
   String getCurrentDateTimeAsString() {
     DateTime now = DateTime.now();
-    String formattedDate = DateFormat('yyyyMMddHH').format(now);
-    return "${formattedDate}0000";
+    String formattedDate = DateFormat('yyyyMMdd').format(now);
+    return formattedDate;
   }
 
-  String getNextDayAsString(DateTime selectedDateTime) {
-    DateTime nextDay = selectedDateTime.add(const Duration(days: 1));
+  String getLastWeekInitial() {
+    DateTime now = DateTime.now();
+    DateTime nextDay = now.subtract(const Duration(days: 7));
     String nextDayString = DateFormat('yyyyMMdd').format(nextDay);
-    return "${nextDayString}235959";
+    return nextDayString;
+  }
+
+  String getLastWeekEndTime(DateTime selectedDateTime) {
+    DateTime nextDay = selectedDateTime.subtract(const Duration(days: 7));
+    String nextDayString = DateFormat('yyyyMMdd').format(nextDay);
+    return nextDayString;
   }
 
   void callAPIMethod(String sT, String eT, String sId) {
     context.read<DashboardCubit>().dashboardSensorList(sId, sT, eT);
+  }
+
+  String convertTo12HourFormat(String time24) {
+    try {
+      if (time24 != "0") {
+        final DateFormat formatter = DateFormat('HH');
+        final DateTime dateTime = formatter.parse(time24);
+        final String formattedTime = DateFormat('h a').format(dateTime);
+        return formattedTime;
+      } else {
+        return '0';
+      }
+    } catch (e) {
+      print('Error parsing time: $e');
+      return '0'; // Return a default value or handle the error appropriately
+    }
   }
 
   List<ChartData> _convertToChartData(List<HourlyEntry>? hourlyEntry) {
@@ -93,356 +115,659 @@ class _HomeFragmentState extends State<HomeFragment> {
     return chartDataList;
   }
 
+  List<ChartData> _convertToChartDataOccupancy(List<HourlyEntry>? hourlyEntry) {
+    List<ChartData> chartDataList = [];
+    if (hourlyEntry != null) {
+      for (HourlyEntry entry in hourlyEntry) {
+        chartDataList.add(ChartData(
+          hour: entry.hour ?? "",
+          inValue: entry.inValue! - entry.outValue! ?? 0,
+          outValue: entry.outValue ?? 0,
+        ));
+      }
+    }
+    return chartDataList;
+  }
+
+  List<ChartData> _convertToChartDataOccupancyLastWeek(
+      List<HourlyEntry>? hourlyEntry) {
+    List<ChartData> chartDataList = [];
+    if (hourlyEntry != null) {
+      int previousTotal = 0;
+      for (HourlyEntry entry in hourlyEntry) {
+        int currentIn = entry.inValue!;
+        int currentOut = entry.outValue!;
+        // int currentTotal = previousTotal + currentIn - currentOut;
+        int currentTotal = (previousTotal + currentIn - currentOut)
+            .clamp(0, double.infinity)
+            .toInt();
+        chartDataList.add(ChartData(
+          hour: entry.hour ?? "",
+          inValue: currentTotal ?? 0,
+          outValue: entry.outValue ?? 0,
+        ));
+        previousTotal = currentTotal;
+      }
+    }
+    return chartDataList;
+  }
+
   List<ChartData> chartHourEntry = [];
+  List<ChartData> chartHourEntryLastWeek = [];
   List<ChartData> chartHourExit = [];
+  List<ChartData> chartHourExitLastWeek = [];
   List<ChartData> chartHourOccupancy = [];
+  List<ChartData> chartHourOccupancyLastWeek = [];
+
+  int maxValueHourEntry = 200;
+  int intervalHourEntry = 40;
+
+  int maxValueHourExit = 200;
+  int intervalHourExit = 40;
+
+  int maxValueHourOccupancy = 60;
+  int intervalHourOccupancy = 10;
+
+  int roundToNearest(int value, int roundTo) {
+    if (value <= 60) {
+      return 80;
+    } else if (value <= 80) {
+      return 120;
+    } else if (value <= 100) {
+      return 140;
+    } else if (value <= 120) {
+      return 160;
+    } else if (value <= 140) {
+      return 180;
+    } else if (value <= 150) {
+      return 200;
+    } else if (value <= 200) {
+      return 250;
+    } else if (value <= 300) {
+      return 350;
+    } else if (value <= 350) {
+      return 400;
+    } else if (value <= 400) {
+      return 450;
+    } else if (value <= 450) {
+      return 500;
+    } else if (value <= 500) {
+      return 600;
+    } else if (value <= 600) {
+      return 700;
+    } else if (value <= 900) {
+      return 1000;
+    } else if (value <= 1200) {
+      return 1900;
+    } else if (value <= 1600) {
+      return 2200;
+    } else if (value <= 2000) {
+      return 2600;
+    } else if (value <= 2500) {
+      return 3000;
+    } else if (value <= 3500) {
+      return 4000;
+    } else if (value <= 4000) {
+      return 5000;
+    } else if (value <= 5500) {
+      return 7000;
+    } else if (value <= 7500) {
+      return 9000;
+    } else if (value <= 9500) {
+      return 10000;
+    } else {
+      return (value / 50).ceil() * 50; // Round to the nearest multiple of 50
+    }
+  }
+
+  // Method to handle refresh action
+  Future<void> _handleRefresh() async {
+    // Simulate a delay for refreshing data (e.g., fetch new data from API)
+    callAPIMethod(startTime, endTime, sensorIdValue);
+    await Future.delayed(const Duration(seconds: 2));
+
+    // Update the list data
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<DashboardCubit, DashboardState>(
-      listener: (context, state) {
-        if (state is DashboardSensorInfoLoaded) {
-          final String l1 = state.dashboardSensorList.entryTotalLastweek!;
-          entryTotal = state.dashboardSensorList.entryTotalLastweek!;
-          print("entry Total $entryTotal");
-          exitTotal = state.dashboardSensorList.exitTotalLastweek!;
-          peakHour = state.dashboardSensorList.peakHourLastweek!;
-          avgDwellTime = state.dashboardSensorList.avgDwellTime!;
-          maxDwellTime = state.dashboardSensorList.maxDwellTime!;
-          chartHourEntry =
-              _convertToChartData(state.dashboardSensorList.hourlyEntry);
-          chartHourExit =
-              _convertToChartData(state.dashboardSensorList.hourlyExit);
-          chartHourOccupancy =
-              _convertToChartData(state.dashboardSensorList.hourlyOccupancy);
-        } else if (state is DashboardError) {
-          showErrorToast(
-              appErrorType: state.appErrorType,
-              errorMessage: state.errorMessage);
-        }
-      },
-      builder: (context, state) {
-        return LoadingWidget(
-          showLoading: state is DashboardLoading,
-          child: Scaffold(
-            backgroundColor: ThemeConstants.white,
-            body: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    10.height,
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        DropdownSearch<DropDownValues?>(
-                          items: AppContext()
-                              .listDropdown
-                              .map((item) => DropDownValues(
-                                    value: item.areaId,
-                                    name: item.areaName!,
-                                  ))
-                              .toList(),
-                          popupProps: PopupProps.menu(
-                            constraints: const BoxConstraints(
-                              maxHeight: 150,
+    return RefreshIndicator(
+      onRefresh: _handleRefresh,
+      child: BlocConsumer<DashboardCubit, DashboardState>(
+        listener: (context, state) {
+          if (state is DashboardInfoLoaded) {
+            _selectTitle = DropDownValues(
+              name: AppContext().listDropdown[0].areaName!,
+              value: AppContext().listDropdown[0].areaId!,
+            );
+            try {
+              sensorIdValue = AppContext().listDropdown[0].areaId ?? "";
+              callAPIMethod(startTime, endTime, sensorIdValue);
+            } catch (e) {}
+          }
+          if (state is DashboardSensorInfoLoaded) {
+            entryTotalCurrent =
+                state.dashboardSensorListCurrentWeek.entryTotalCurrentweek!;
+            entryTotal =
+                state.dashboardSensorListLastWeek.entryTotalCurrentweek!;
+            exitTotalCurrent =
+                state.dashboardSensorListCurrentWeek.exitTotalCurrentweek!;
+            exitTotal = state.dashboardSensorListLastWeek.exitTotalCurrentweek!;
+            peakHourCurrent =
+                state.dashboardSensorListCurrentWeek.peakHourCurrentweek!;
+            peakHour = state.dashboardSensorListLastWeek.peakHourCurrentweek!;
+            avgDwellTime = state.dashboardSensorListCurrentWeek.avgDwellTime!;
+            maxDwellTime = state.dashboardSensorListCurrentWeek.maxDwellTime!;
+            //hourly entry
+            chartHourEntry = _convertToChartData(
+                state.dashboardSensorListCurrentWeek.hourlyEntry);
+            chartHourEntryLastWeek = _convertToChartData(
+                state.dashboardSensorListLastWeek.hourlyEntry);
+            //hourly exit
+            chartHourExit = _convertToChartData(
+                state.dashboardSensorListCurrentWeek.hourlyExit);
+            chartHourExitLastWeek = _convertToChartData(
+                state.dashboardSensorListLastWeek.hourlyExit);
+            //hourly occupancy
+            chartHourOccupancy = _convertToChartDataOccupancyLastWeek(
+                state.dashboardSensorListCurrentWeek.hourlyOccupancy);
+            chartHourOccupancyLastWeek = _convertToChartDataOccupancyLastWeek(
+                state.dashboardSensorListLastWeek.hourlyOccupancy);
+
+            try {
+              maxValueHourEntry = chartHourEntry
+                  .map((data) => data.inValue)
+                  .reduce((a, b) => a > b ? a : b);
+              int maxValueHourEntryLastWeek = 200;
+              maxValueHourEntryLastWeek = chartHourEntryLastWeek
+                  .map((data) => data.inValue)
+                  .reduce((a, b) => a > b ? a : b);
+              int maxValue = maxValueHourEntry >= maxValueHourEntryLastWeek
+                  ? maxValueHourEntry
+                  : maxValueHourEntryLastWeek;
+
+              int range = maxValue;
+              int roundedRange = roundToNearest(range, 50);
+              intervalHourEntry = (roundedRange / 5).ceil();
+              maxValueHourEntry = roundToNearest(maxValue, 50);
+            } catch (e) {}
+
+            try {
+              maxValueHourExit = chartHourExit
+                  .map((data) => data.inValue)
+                  .reduce((a, b) => a > b ? a : b);
+              int maxValueHourExitLastWeek = 200;
+              maxValueHourExitLastWeek = chartHourEntryLastWeek
+                  .map((data) => data.inValue)
+                  .reduce((a, b) => a > b ? a : b);
+              int maxValue = maxValueHourExit >= maxValueHourExitLastWeek
+                  ? maxValueHourExit
+                  : maxValueHourExitLastWeek;
+              int range = maxValue;
+              int roundedRange = roundToNearest(range, 50);
+              intervalHourExit = (roundedRange / 5).ceil();
+              maxValueHourExit = roundToNearest(maxValue, 50);
+            } catch (e) {}
+
+            try {
+              maxValueHourOccupancy = chartHourOccupancy
+                  .map((data) => data.inValue)
+                  .reduce((a, b) => a > b ? a : b);
+              int maxValueHourOccupancyLastWeek = 200;
+              maxValueHourOccupancyLastWeek = chartHourOccupancyLastWeek
+                  .map((data) => data.inValue)
+                  .reduce((a, b) => a > b ? a : b);
+              int maxValue =
+                  maxValueHourOccupancy >= maxValueHourOccupancyLastWeek
+                      ? maxValueHourOccupancy
+                      : maxValueHourOccupancyLastWeek;
+              print(
+                  "maxoccupancy $maxValue ===== $maxValueHourOccupancy ----- $maxValueHourOccupancyLastWeek ");
+              int range = maxValue;
+              int roundedRange = roundToNearest(range, 50);
+              intervalHourOccupancy = (roundedRange / 5).ceil();
+              maxValueHourOccupancy = roundToNearest(maxValue, 50);
+            } catch (e) {}
+          } else if (state is DashboardError) {
+            showErrorToast(
+                appErrorType: state.appErrorType,
+                errorMessage: state.errorMessage);
+          }
+        },
+        builder: (context, state) {
+          return LoadingWidget(
+            showLoading: state is DashboardLoading,
+            child: Scaffold(
+              backgroundColor: ThemeConstants.white,
+              body: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      10.height,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          dropDownMethod(context),
+                          20.height,
+                          dateTimeFieldCurrent(context),
+                        ],
+                      ),
+                      15.height,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          cardWidget(
+                            "Entry Total: $entryTotalCurrent",
+                            "Last Week: $entryTotal ",
+                            ThemeConstants.entryTotalColorCode,
+                          ),
+                          cardWidget(
+                            "Peak Hour: ${convertTo12HourFormat(peakHourCurrent)}",
+                            "Last Week: ${convertTo12HourFormat(peakHour)}",
+                            ThemeConstants.peakHourColorCode,
+                          ),
+                          // cardWidget(
+                          //   "Max Occupancy: $exitTotalCurrent",
+                          //   "Last Week: $exitTotal ",
+                          //   ThemeConstants.exitTotalColorCode,
+                          // ),
+                        ],
+                      ),
+                      10.height,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          // cardWidget(
+                          //   "Peak Hour: $peakHourCurrent",
+                          //   "Last Week: $peakHour ",
+                          //   ThemeConstants.peakHourColorCode,
+                          // ),
+                          Card(
+                            elevation: 2,
+                            color: ThemeConstants.avgDwellTimeColorCode,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(8.0)),
                             ),
-                            itemBuilder:
-                                (context, DropDownValues? item, isSelected) =>
-                                    Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: AppSizeConstants.screenVertical,
-                                  horizontal:
-                                      AppSizeConstants.screenHorizontal),
-                              child: Text(
-                                item!.name,
-                                style: _selectTitle == item
-                                    ? Theme.of(context)
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 6.0, top: 5, bottom: 2, right: 2),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "AvgDwellTime: $avgDwellTime(Min)",
+                                    maxLines: 1,
+                                    style: Theme.of(context)
                                         .textTheme
-                                        .bodyMedium
-                                        ?.apply(
-                                            color: ThemeConstants.primaryColor)
-                                    : Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            ),
-                            menuProps: const MenuProps(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.vertical(
-                                  bottom: Radius.circular(
-                                      AppSizeConstants.xtralargeSpacing),
-                                ),
-                              ),
-                            ),
-                          ),
-                          validator: (value) =>
-                              value == null ? AppConstants.selectTitle : null,
-                          onChanged: (DropDownValues? value) {
-                            _selectTitle = value;
-                            sensorIdValue = _selectTitle!.value;
-                            callAPIMethod(startTime, endTime, sensorIdValue);
-                          },
-                          selectedItem: _selectTitle,
-                          itemAsString: (DropDownValues? item) => item!.name,
-                          dropdownDecoratorProps: DropDownDecoratorProps(
-                            dropdownSearchDecoration:
-                                AppStyles.customInputDecoration(
-                              context,
-                              label: const RequiredText(
-                                label: AppConstants.selectTitle,
+                                        .bodySmall!
+                                        .copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  5.height,
+                                  Text(
+                                    "MaxDwellTime: $maxDwellTime(Min)",
+                                    maxLines: 1,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall!
+                                        .copyWith(
+                                            fontWeight: FontWeight.normal),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
+                        ],
+                      ),
+                      10.height,
+                      SfCartesianChart(
+                        title: ChartTitle(
+                          text: 'Hourly Entry',
+                          alignment: ChartAlignment.near,
                         ),
-                        20.height,
-                        DateTimeField(
-                          decoration: InputDecoration(
-                            hintStyle: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(color: ThemeConstants.grey),
-                            labelStyle: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(color: ThemeConstants.grey),
-                            label: const RequiredText(
-                              label: "Choose Date",
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide:
-                                  const BorderSide(color: ThemeConstants.black),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide:
-                                  const BorderSide(color: ThemeConstants.black),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide:
-                                  const BorderSide(color: ThemeConstants.black),
-                            ),
-                            hintText: "dd/mm/yyyy",
-                            suffixIcon: Image.asset(
-                              'assets/pngs/calendaricon.png',
-                              width: 24,
-                              height: 24,
+                        legend: Legend(
+                          isVisible: true,
+                          position: LegendPosition.bottom,
+                        ),
+                        primaryXAxis: CategoryAxis(
+                          majorGridLines: const MajorGridLines(
+                            width: 0,
+                            dashArray: [1, 5],
+                            color: Colors.grey,
+                          ),
+                        ),
+                        primaryYAxis: NumericAxis(
+                          opposedPosition: false,
+                          axisLine: const AxisLine(width: 1),
+                          // majorGridLines: const MajorGridLines(width: 1),
+                          majorTickLines: const MajorTickLines(size: 1),
+                          minimum: 0,
+                          maximum: maxValueHourEntry.toDouble(),
+                          interval: intervalHourEntry.toDouble(),
+                        ),
+                        series: <ChartSeries<ChartData, String>>[
+                          LineSeries<ChartData, String>(
+                            name: "Current Week",
+                            color: Colors.blue.shade400,
+                            dataSource: chartHourEntry,
+                            xValueMapper: (ChartData data, _) =>
+                                "${data.hour.toString()}hr",
+                            yValueMapper: (ChartData data, _) => data.inValue,
+                            markerSettings: MarkerSettings(
+                              isVisible: true,
+                              height: 3,
+                              width: 3,
+                              borderColor: Colors.red.shade300,
+                              shape: DataMarkerType.circle,
                             ),
                           ),
-                          format: format,
-                          onShowPicker: (context, currentValue) async {
-                            final selectedDate = await showDatePicker(
-                              context: context,
-                              firstDate: DateTime(1900),
-                              initialDate: currentValue ?? DateTime.now(),
-                              lastDate: DateTime(2100),
-                            );
-                            if (selectedDate != null) {
-                              // final selectedTime = await showTimePicker(
-                              //   context: context,
-                              //   initialTime: TimeOfDay.fromDateTime(
-                              //       currentValue ?? DateTime.now()),
-                              // );
-                              // if (selectedTime != null) {
-                              final selectedDateTime = DateTime(
-                                selectedDate.year,
-                                selectedDate.month,
-                                selectedDate.day,
-                              );
-                              final formatDate = DateFormat('yyyyMMddHH')
-                                  .format(selectedDateTime);
-                              final endDate = DateFormat('yyyyMMdd')
-                                  .format(selectedDateTime);
-                              startTime = "${formatDate}0000";
-                              endTime =
-                                  "${endDate}235959"; //getNextDayAsString(selectedDateTime);
-                              callAPIMethod(startTime, endTime, sensorIdValue);
-                              return selectedDateTime;
-                              // }
-                            }
-                            // Return the currentValue if the user cancels
-                            return currentValue;
-                          },
+                          LineSeries<ChartData, String>(
+                            name: "Last Week",
+                            color: Colors.grey.shade400,
+                            dataSource: chartHourEntryLastWeek,
+                            xValueMapper: (ChartData data, _) =>
+                                "${data.hour.toString()}hr",
+                            yValueMapper: (ChartData data, _) => data.inValue,
+                            markerSettings: MarkerSettings(
+                              isVisible: true,
+                              height: 3,
+                              width: 3,
+                              borderColor: Colors.green.shade300,
+                              shape: DataMarkerType.circle,
+                            ),
+                          ),
+                        ],
+                        tooltipBehavior: TooltipBehavior(
+                          enable: true,
+                          format: 'point.x \n point.y',
                         ),
-                      ],
-                    ),
-                    15.height,
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        cardWidget(entryTotal, "Entry Total\nLast Week ",
-                            ThemeConstants.entryTotalColorCode),
-                        cardWidget(exitTotal, "Exit Total\nLast Week ",
-                            ThemeConstants.exitTotalColorCode),
-                      ],
-                    ),
-                    10.height,
-                    Row(
-                      children: [
-                        cardWidget(peakHour, "Peak Hour\nLast Week ",
-                            ThemeConstants.peakHourColorCode),
-                        cardWidgetDwellTime(
-                            "\nAvgDwellTime: $avgDwellTime",
-                            "MaxDwellTime: $maxDwellTime ",
-                            ThemeConstants.avgDwellTimeColorCode),
-                      ],
-                    ),
-                    10.height,
-                    SfCartesianChart(
-                      title: ChartTitle(
-                        text: 'Hourly Entry',
-                        alignment: ChartAlignment.near,
+                        // trackballBehavior: TrackballBehavior(
+                        //   enable: true,
+                        //   activationMode: ActivationMode.singleTap,
+                        //   // tooltipSettings:
+                        //   //     const InteractiveTooltip(enable: true),
+                        //   markerSettings: const TrackballMarkerSettings(
+                        //     markerVisibility: TrackballVisibilityMode.visible,
+                        //   ),
+                        //   lineType: TrackballLineType.horizontal,
+                        // ),
                       ),
-                      primaryXAxis: CategoryAxis(
-                        majorGridLines: const MajorGridLines(width: 0),
-                        majorTickLines: const MajorTickLines(width: 0),
-                        interval: 0.2,
-                      ),
-                      primaryYAxis: NumericAxis(
-                        axisLine: const AxisLine(width: 2),
-                        majorGridLines: const MajorGridLines(width: 1),
-                        majorTickLines: const MajorTickLines(size: 5),
-                        minimum: 0,
-                        maximum: 400,
-                        interval: 50,
-                      ),
-                      series: <CartesianSeries<ChartData, String>>[
-                        ColumnSeries<ChartData, String>(
-                          width: 0.5,
-                          spacing: 0.2,
-                          color: Colors.grey.withOpacity(0.5),
-                          dataSource: chartHourEntry,
-                          xValueMapper: (ChartData data, _) =>
-                              "${data.hour.toString()}hr",
-                          yValueMapper: (ChartData data, _) => data.inValue,
+                      20.height,
+                      SfCartesianChart(
+                        title: ChartTitle(
+                          text: 'Hourly Exit',
+                          alignment: ChartAlignment.near,
                         ),
-                        ColumnSeries<ChartData, String>(
-                          width: 0.5,
-                          spacing: 0.2,
-                          color: Colors.blue.withOpacity(0.5),
-                          dataSource: chartHourEntry,
-                          xValueMapper: (ChartData data, _) =>
-                              "${data.hour.toString()}hr",
-                          yValueMapper: (ChartData data, _) => data.outValue,
+                        primaryXAxis: CategoryAxis(
+                          majorGridLines: const MajorGridLines(
+                            width: 0,
+                            dashArray: [1, 5],
+                            color: Colors.grey,
+                          ),
                         ),
-                      ],
-                      trackballBehavior: TrackballBehavior(
-                        enable: true,
-                        activationMode: ActivationMode.singleTap,
-                        tooltipSettings: const InteractiveTooltip(enable: true),
-                        markerSettings: const TrackballMarkerSettings(
-                          markerVisibility: TrackballVisibilityMode.visible,
+                        primaryYAxis: NumericAxis(
+                          axisLine: const AxisLine(width: 2),
+                          majorGridLines: const MajorGridLines(width: 1),
+                          majorTickLines: const MajorTickLines(size: 5),
+                          minimum: 0,
+                          maximum: maxValueHourExit.toDouble(),
+                          interval: intervalHourExit.toDouble(),
                         ),
-                        lineType: TrackballLineType.vertical,
-                      ),
-                    ),
-                    20.height,
-                    SfCartesianChart(
-                      title: ChartTitle(
-                        text: 'Hourly Exit',
-                        alignment: ChartAlignment.near,
-                      ),
-                      primaryXAxis: CategoryAxis(
-                        majorGridLines: const MajorGridLines(width: 0),
-                        majorTickLines: const MajorTickLines(width: 0),
-                        interval: 0.2,
-                      ),
-                      primaryYAxis: NumericAxis(
-                        axisLine: const AxisLine(width: 2),
-                        majorGridLines: const MajorGridLines(width: 1),
-                        majorTickLines: const MajorTickLines(size: 5),
-                        minimum: 0,
-                        maximum: 400,
-                        interval: 50,
-                      ),
-                      series: <CartesianSeries<ChartData, String>>[
-                        ColumnSeries<ChartData, String>(
-                          width: 0.5,
-                          spacing: 0.2,
-                          color: Colors.grey.withOpacity(0.5),
-                          dataSource: chartHourExit,
-                          xValueMapper: (ChartData data, _) =>
-                              "${data.hour.toString()}hr",
-                          yValueMapper: (ChartData data, _) => data.inValue,
+                        legend: Legend(
+                            isVisible: true, position: LegendPosition.bottom),
+                        series: <ChartSeries<ChartData, String>>[
+                          LineSeries<ChartData, String>(
+                            name: "Current Week",
+                            color: Colors.pink.shade300,
+                            dataSource: chartHourExit,
+                            xValueMapper: (ChartData data, _) =>
+                                "${data.hour.toString()}hr",
+                            yValueMapper: (ChartData data, _) => data.outValue,
+                            markerSettings: MarkerSettings(
+                              isVisible: true,
+                              height: 3, // Reduce the size of the marker
+                              width: 3, // Reduce the size of the marker
+                              borderColor: Colors.red.shade300,
+                              shape: DataMarkerType.diamond,
+                            ),
+                          ),
+                          LineSeries<ChartData, String>(
+                            name: "Last Week",
+                            color: Colors.grey.shade400,
+                            dataSource: chartHourExitLastWeek,
+                            xValueMapper: (ChartData data, _) =>
+                                "${data.hour.toString()}hr",
+                            yValueMapper: (ChartData data, _) => data.outValue,
+                            markerSettings: MarkerSettings(
+                              isVisible: true,
+                              height: 3, // Reduce the size of the marker
+                              width: 3, // Reduce the size of the marker
+                              borderColor: Colors.green.shade300,
+                              shape: DataMarkerType.diamond,
+                            ),
+                          ),
+                        ],
+                        tooltipBehavior: TooltipBehavior(
+                          enable: true,
+                          // format: 'point.x \n point.y',
+                          header: "",
+                          format: 'point.x \n point.y',
+                          // format:
+                          //     'point.x \n Current Week: point.y1 \n Last Week: point.y2',
                         ),
-                        ColumnSeries<ChartData, String>(
-                          width: 0.5,
-                          spacing: 0.2,
-                          color: Colors.pink.withOpacity(0.5),
-                          dataSource: chartHourExit,
-                          xValueMapper: (ChartData data, _) =>
-                              "${data.hour.toString()}hr",
-                          yValueMapper: (ChartData data, _) => data.outValue,
-                        ),
-                      ],
-                      trackballBehavior: TrackballBehavior(
-                        enable: true,
-                        activationMode: ActivationMode.singleTap,
-                        tooltipSettings: const InteractiveTooltip(enable: true),
-                        markerSettings: const TrackballMarkerSettings(
-                          markerVisibility: TrackballVisibilityMode.visible,
-                        ),
-                        lineType: TrackballLineType.vertical,
                       ),
-                    ),
-                    20.height,
-                    SfCartesianChart(
-                      title: ChartTitle(
-                        text: 'Hourly Occupancy',
-                        alignment: ChartAlignment.near,
-                      ),
-                      primaryXAxis: CategoryAxis(
-                        majorGridLines: const MajorGridLines(width: 0),
-                        majorTickLines: const MajorTickLines(width: 0),
-                        interval: 0.2,
-                      ),
-                      primaryYAxis: NumericAxis(
-                        axisLine: const AxisLine(width: 2),
-                        majorGridLines: const MajorGridLines(width: 1),
-                        majorTickLines: const MajorTickLines(size: 5),
-                        minimum: 0,
-                        maximum: 400,
-                        interval: 50,
-                      ),
-                      series: <CartesianSeries<ChartData, String>>[
-                        ColumnSeries<ChartData, String>(
-                          width: 0.5,
-                          spacing: 0.2,
-                          color: Colors.grey.withOpacity(0.5),
-                          dataSource: chartHourOccupancy,
-                          xValueMapper: (ChartData data, _) =>
-                              "${data.hour.toString()}hr",
-                          yValueMapper: (ChartData data, _) => data.inValue,
+                      20.height,
+                      SfCartesianChart(
+                        title: ChartTitle(
+                          text: 'Hourly Occupancy',
+                          alignment: ChartAlignment.near,
                         ),
-                        ColumnSeries<ChartData, String>(
-                          width: 0.5,
-                          spacing: 0.2,
-                          color: Colors.yellow,
-                          dataSource: chartHourOccupancy,
-                          xValueMapper: (ChartData data, _) =>
-                              "${data.hour.toString()}hr",
-                          yValueMapper: (ChartData data, _) => data.outValue,
+                        primaryXAxis: CategoryAxis(
+                          majorGridLines: const MajorGridLines(
+                            width: 0,
+                            dashArray: [1, 5],
+                            color: Colors.grey,
+                          ),
                         ),
-                      ],
-                      trackballBehavior: TrackballBehavior(
-                        enable: true,
-                        activationMode: ActivationMode.singleTap,
-                        tooltipSettings: const InteractiveTooltip(enable: true),
-                        markerSettings: const TrackballMarkerSettings(
-                          markerVisibility: TrackballVisibilityMode.visible,
+                        primaryYAxis: NumericAxis(
+                          axisLine: const AxisLine(width: 2),
+                          majorGridLines: const MajorGridLines(width: 1),
+                          majorTickLines: const MajorTickLines(size: 5),
+                          minimum: 0,
+                          maximum: maxValueHourOccupancy.toDouble(),
+                          interval: intervalHourOccupancy.toDouble(),
                         ),
-                        lineType: TrackballLineType.vertical,
+                        legend: Legend(
+                            isVisible: true, position: LegendPosition.bottom),
+                        series: <ChartSeries<ChartData, String>>[
+                          LineSeries<ChartData, String>(
+                            name: "Current Week",
+                            color: Colors.yellow.shade800,
+                            dataSource: chartHourOccupancy,
+                            xValueMapper: (ChartData data, _) =>
+                                "${data.hour.toString()}hr",
+                            yValueMapper: (ChartData data, _) => data.inValue,
+                            markerSettings: MarkerSettings(
+                              isVisible: true,
+                              height: 3,
+                              width: 3,
+                              borderColor: Colors.red.shade300,
+                              shape: DataMarkerType.diamond,
+                            ),
+                          ),
+                          LineSeries<ChartData, String>(
+                            name: "Last Week",
+                            color: Colors.grey.shade400,
+                            dataSource: chartHourOccupancyLastWeek,
+                            xValueMapper: (ChartData data, _) =>
+                                "${data.hour.toString()}hr",
+                            yValueMapper: (ChartData data, _) => data.inValue,
+                            markerSettings: MarkerSettings(
+                              isVisible: true,
+                              height: 2, // Reduce the size of the marker
+                              width: 2, // Reduce the size of the marker
+                              borderColor: Colors.green.shade800,
+                              shape: DataMarkerType.diamond,
+                            ),
+                          ),
+                        ],
+                        trackballBehavior: TrackballBehavior(
+                          enable: true,
+                          activationMode: ActivationMode.singleTap,
+                          tooltipSettings:
+                              const InteractiveTooltip(enable: true),
+                          markerSettings: const TrackballMarkerSettings(
+                            markerVisibility: TrackballVisibilityMode.visible,
+                          ),
+                          lineType: TrackballLineType.vertical,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
+          );
+        },
+      ),
+    );
+  }
+
+  DateTimeField dateTimeFieldCurrent(BuildContext context) {
+    return DateTimeField(
+      initialValue: DateTime.now(),
+      decoration: InputDecoration(
+        hintStyle: Theme.of(context)
+            .textTheme
+            .bodyMedium!
+            .copyWith(color: ThemeConstants.grey),
+        labelStyle: Theme.of(context)
+            .textTheme
+            .bodyMedium!
+            .copyWith(color: ThemeConstants.grey),
+        label: const RequiredText(
+          label: "Choose Date",
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: const BorderSide(color: ThemeConstants.black),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: const BorderSide(color: ThemeConstants.black),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: const BorderSide(color: ThemeConstants.black),
+        ),
+        hintText: "dd/mm/yyyy",
+        suffixIcon: Image.asset(
+          'assets/pngs/calendaricon.png',
+          width: 24,
+          height: 24,
+        ),
+      ),
+      format: format,
+      onShowPicker: (context, currentValue) async {
+        final DateTime? selectedDate =
+            await showCustomDatePicker(context, currentValue);
+        if (selectedDate != null) {
+          final selectedDateTime = DateTime(
+            selectedDate.year,
+            selectedDate.month,
+            selectedDate.day,
+          );
+          final formatDate = DateFormat('yyyyMMdd').format(selectedDateTime);
+          // final endDate = DateFormat('yyyyMMdd').format(selectedDateTime);
+          startTime = formatDate;
+          endTime = getLastWeekEndTime(selectedDateTime);
+          callAPIMethod(startTime, endTime, sensorIdValue);
+        }
+        return selectedDate;
+      },
+    );
+  }
+
+  Future<DateTime?> showCustomDatePicker(
+      BuildContext context, DateTime? currentValue) async {
+    final DateTime? selectedDate = await showDialog<DateTime>(
+      context: context,
+      builder: (BuildContext context) {
+        final DateTime initialDate = currentValue ?? DateTime.now();
+        DateTime? selectedDate;
+        return Dialog(
+          child: CalendarDatePicker(
+            initialDate: initialDate,
+            firstDate: DateTime(1900),
+            lastDate: DateTime(2100),
+            onDateChanged: (DateTime date) {
+              selectedDate = date;
+              Navigator.of(context).pop(selectedDate);
+            },
           ),
         );
       },
+    );
+    return selectedDate;
+  }
+
+  DropdownSearch<DropDownValues?> dropDownMethod(BuildContext context) {
+    return DropdownSearch<DropDownValues?>(
+      items: AppContext()
+          .listDropdown
+          .map((item) => DropDownValues(
+                value: item.areaId,
+                name: item.areaName!,
+              ))
+          .toList(),
+      popupProps: PopupProps.menu(
+        constraints: const BoxConstraints(
+          maxHeight: 150,
+        ),
+        itemBuilder: (context, DropDownValues? item, isSelected) => Padding(
+          padding: const EdgeInsets.symmetric(
+              vertical: AppSizeConstants.screenVertical,
+              horizontal: AppSizeConstants.screenHorizontal),
+          child: Text(
+            item!.name,
+            style: _selectTitle == item
+                ? Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.apply(color: ThemeConstants.primaryColor)
+                : Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+        menuProps: const MenuProps(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(AppSizeConstants.xtralargeSpacing),
+            ),
+          ),
+        ),
+      ),
+      validator: (value) => value == null ? AppConstants.selectTitle : null,
+      onChanged: (DropDownValues? value) {
+        _selectTitle = value;
+        sensorIdValue = _selectTitle!.value;
+        callAPIMethod(startTime, endTime, sensorIdValue);
+      },
+      selectedItem: _selectTitle,
+      itemAsString: (DropDownValues? item) => item!.name,
+      dropdownDecoratorProps: DropDownDecoratorProps(
+        dropdownSearchDecoration: AppStyles.customInputDecoration(
+          context,
+          label: const RequiredText(
+            label: AppConstants.selectTitle,
+          ),
+        ),
+      ),
     );
   }
 
@@ -454,19 +779,29 @@ class _HomeFragmentState extends State<HomeFragment> {
             borderRadius: BorderRadius.all(Radius.circular(8.0)),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding:
+                const EdgeInsets.only(left: 6.0, top: 5, bottom: 2, right: 2),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   amt,
+                  maxLines: 1,
                   style: Theme.of(context)
                       .textTheme
-                      .titleMedium!
+                      .bodySmall!
                       .copyWith(fontWeight: FontWeight.bold),
                 ),
-                15.height,
-                Text(text2),
+                5.height,
+                Text(
+                  text2,
+                  maxLines: 1,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall!
+                      .copyWith(fontWeight: FontWeight.normal),
+                ),
               ],
             ),
           ),
@@ -546,196 +881,6 @@ class _HomeFragmentState extends State<HomeFragment> {
           ],
         )
       ]),
-    );
-  }
-
-  void _showRadioBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        int selectedOption = 1; // Initialize the selected option
-
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return Container(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Select an Option',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium!
-                            .copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        icon: const Icon(Icons.close),
-                      ),
-                    ],
-                  ),
-                  RadioListTile<int>(
-                    title: Text('Relevant Jobs',
-                        style: Theme.of(context).textTheme.titleSmall),
-                    value: 1,
-                    groupValue: selectedOption,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedOption = value!;
-                      });
-                    },
-                    contentPadding: const EdgeInsets.symmetric(
-                        vertical: -1.0, horizontal: 8.0),
-                    dense: true,
-                  ),
-                  RadioListTile<int>(
-                    title: Text('Salary - Hight to low',
-                        style: Theme.of(context).textTheme.titleSmall),
-                    value: 2,
-                    groupValue: selectedOption,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedOption = value!;
-                      });
-                    },
-                    contentPadding: const EdgeInsets.symmetric(
-                        vertical: -1.0, horizontal: 8.0),
-                    dense: true,
-                  ),
-                  RadioListTile<int>(
-                    title: Text(
-                      'Salary - Latest to oldest',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    value: 3,
-                    groupValue: selectedOption,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedOption = value!;
-                      });
-                    },
-                    contentPadding: const EdgeInsets.symmetric(
-                        vertical: -1.0, horizontal: 8.0),
-                    dense: true,
-                  ),
-                  SizedBox(height: 16.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      CustomButton(
-                        buttonWidth: 150,
-                        color: Colors.white,
-                        onPressed: () {
-                          setState(() {
-                            selectedOption = 0; // Clear the selection
-                          });
-                        },
-                        title: "Clear",
-                      ),
-                      CustomButton(
-                        buttonWidth: 150,
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        title: 'Apply',
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  String selectedOption = 'Option 1'; // Default selection
-  List<String> filterOptions = [
-    'Option 1',
-    'Option 2',
-    'Option 3',
-    'Option 4',
-    'Option 5',
-  ];
-
-  List<String> selectedOptions = [];
-
-  void _showFilterModalSheet() {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return Container(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Filter Options:'),
-                  Wrap(
-                    spacing: 8.0,
-                    children: filterOptions.map((String option) {
-                      return FilterChip(
-                        label: Text(option),
-                        selected: selectedOptions.contains(option),
-                        onSelected: (bool selected) {
-                          setState(() {
-                            if (selected) {
-                              selectedOptions.add(option);
-                            } else {
-                              selectedOptions.remove(option);
-                            }
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  SizedBox(height: 16.0),
-                  Text('Selected Filter:'),
-                  Text(selectedOptions.isEmpty
-                      ? 'No Filter Selected'
-                      : selectedOptions.join(', ')),
-                  SizedBox(height: 16.0),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: ThemeConstants.primaryColor,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            selectedOptions.clear();
-                          });
-                        },
-                        child: Text('Clear'),
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: ThemeConstants.primaryColor,
-                        ),
-                        onPressed: () {
-                          // Apply your filter logic here
-                          Navigator.pop(context); // Close the modal sheet
-                        },
-                        child: Text('Apply'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
     );
   }
 }

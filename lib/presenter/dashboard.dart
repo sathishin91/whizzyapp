@@ -1,11 +1,14 @@
+import 'package:aligned_dialog/aligned_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../blocs/dashboard/dashboard_cubit.dart';
 import '../constants/theme_constants.dart';
 import '../models/SampleListModel.dart';
+import '../models/sensorModel.dart';
 import 'fragment/Home_Fragment.dart';
 import 'fragment/Profile_Fragment.dart';
 import 'fragment/Report_Fragment.dart';
@@ -23,12 +26,19 @@ class _DashboardState extends State<Dashboard> {
   int selectedIndex = 0;
   String pageTitle = "Jobs";
   DateTime? _lastPressedAt;
-
+  List<ActiveSensorData> sensorDataList = [];
+  String colorCode = "";
   @override
   void initState() {
     super.initState();
     bottomNavMethod();
-    context.read<DashboardCubit>().loadDropdownList();
+    context.read<DashboardCubit>().activeSensorList();
+  }
+
+  String getCurrentDateTimeAsString() {
+    DateTime now = DateTime.now();
+    String formattedDate = DateFormat('yyyyMMddHH').format(now);
+    return "${formattedDate}0000";
   }
 
   // Define the callback function here
@@ -135,6 +145,63 @@ class _DashboardState extends State<Dashboard> {
               ],
             ),
           ),
+          actions: [
+            BlocConsumer<DashboardCubit, DashboardState>(
+              listener: (context, state) {
+                if (state is SensorActiveListInfoLoaded) {
+                  colorCode = state.sensorActiveList[0].statusColor!;
+                  sensorDataList = state.sensorActiveList;
+                }
+              },
+              builder: (context, state) {
+                return GestureDetector(
+                  onTap: () {
+                    context.read<DashboardCubit>().activeSensorList();
+                    showAlignedDialog(
+                      context: context,
+                      builder: _verticalDrawerBuilder(context, sensorDataList),
+                      followerAnchor: Alignment.topLeft,
+                      isGlobal: true,
+                      transitionsBuilder: (BuildContext context,
+                          Animation<double> animation,
+                          Animation<double> secondaryAnimation,
+                          Widget child) {
+                        return SlideTransition(
+                          position: Tween(
+                                  begin: const Offset(-1, 0),
+                                  end: const Offset(0, 0))
+                              .animate(animation),
+                          child: FadeTransition(
+                            opacity: CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOut,
+                            ),
+                            child: child,
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Icon(
+                      //O-orange R-Red Y-yellow G-Green
+                      Icons.sensor_window,
+                      color: colorCode == "O"
+                          ? Colors.orange
+                          : colorCode == "R"
+                              ? Colors.red
+                              : colorCode == "Y"
+                                  ? Colors.yellow
+                                  : colorCode == "G"
+                                      ? Colors.green
+                                      : Colors.red,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
           automaticallyImplyLeading: false,
         ),
         body: pages.elementAt(selectedIndex),
@@ -193,5 +260,118 @@ class _DashboardState extends State<Dashboard> {
         ),
       ),
     );
+  }
+
+  Widget newRowWidget(BuildContext context, String text1, String text2, text3) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 5.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 1,
+            child: Text(
+              text1,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+          Expanded(
+            flex: 4,
+            child: Text(
+              text2,
+              maxLines: 5,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              text3,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  String getDateTimeString(String dateValue) {
+    DateTime parsedDate = DateFormat('yyyy-MM-ddTHH:mm:ss').parse(dateValue);
+    String formattedDateString =
+        DateFormat('dd-MMM-yyyy HH:mm:ss').format(parsedDate);
+    return formattedDateString;
+  }
+
+  WidgetBuilder _verticalDrawerBuilder(
+    BuildContext context,
+    List<ActiveSensorData> sensorList,
+  ) {
+    return (BuildContext context) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 50.0, left: 5, right: 5),
+        child: GestureDetector(
+          onTap: () {
+            Navigator.of(context).pop();
+          },
+          child: Container(
+            height: 140,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: ThemeConstants.white,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: DefaultTextStyle(
+              style: const TextStyle(fontSize: 18, color: Colors.black87),
+              child: SingleChildScrollView(
+                child: Container(
+                  color: Colors.white,
+                  // height: screenHeight * 0.2,
+                  // width: screenWidth,
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(1.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          5.height,
+                          Text(
+                            "Sensor Status",
+                            textAlign: TextAlign.left,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          10.height,
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: sensorList.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final sensor = entry.value;
+                              return Column(
+                                children: [
+                                  newRowWidget(
+                                    context,
+                                    "${index + 1}.".toString(),
+                                    sensor.sensor!.sensorUuid.toString(),
+                                    getDateTimeString(
+                                        sensor.timestamp.toString()),
+                                  ),
+                                  if (index != sensorList.length - 1)
+                                    const Divider(),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    };
   }
 }

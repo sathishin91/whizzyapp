@@ -36,7 +36,6 @@ class _NotificationFragmentState extends State<NotificationFragment> {
     return BlocConsumer<DashboardCubit, DashboardState>(
       listener: (context, state) {
         if (state is NotificationInfoLoaded) {
-          print("success");
           notificationAll = state.notificationAll;
         } else if (state is DashboardError) {
           showErrorToast(
@@ -52,27 +51,39 @@ class _NotificationFragmentState extends State<NotificationFragment> {
             children: [
               10.height,
               Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(8),
-                  itemBuilder: (context, index) {
-                    if (index < notificationAll.length) {
-                      return NotificationReportCard(
-                        notificationAll: notificationAll[index],
-                      );
-                    } else {
-                      return Center(
-                        child: Text(
-                          "No Records Found",
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge!
-                              .copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      );
-                    }
-                  },
-                  itemCount: notificationAll.length,
-                ),
+                child: state is NotificationInfoLoaded
+                    ? state.notificationAll.isNotEmpty
+                        ? ListView.builder(
+                            padding: const EdgeInsets.all(8),
+                            itemBuilder: (context, index) {
+                              if (index < notificationAll.length) {
+                                return NotificationReportCard(
+                                  notificationAll: notificationAll[index],
+                                );
+                              } else {
+                                return Center(
+                                  child: Text(
+                                    "No Records Found",
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge!
+                                        .copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                );
+                              }
+                            },
+                            itemCount: notificationAll.length,
+                          )
+                        : Center(
+                            child: Text(
+                              "No Records Found",
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge!
+                                  .copyWith(fontWeight: FontWeight.bold),
+                            ),
+                          )
+                    : Container(),
               ),
               10.height,
             ],

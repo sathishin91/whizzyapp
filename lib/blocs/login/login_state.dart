@@ -50,3 +50,11 @@ class LoginInfoLoaded extends LoginState {
   @override
   List<Object> get props => [];
 }
+
+class DropdownInfoLoaded extends LoginState {
+  // final List<ListDropdown> listDropdown;
+  const DropdownInfoLoaded() : super();
+
+  @override
+  List<Object> get props => [];
+}

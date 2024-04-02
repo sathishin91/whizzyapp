@@ -49,4 +49,21 @@ class LoginRepository {
       return const Left(AppError(AppErrorType.api));
     }
   }
+
+  Future<Either<AppError, CustomResponse>> generateDropdownList() async {
+    try {
+      final response = await _apiClient.postMethod(
+        ApiConstants.areaListDropdown,
+        params: {
+          "token": "",
+        },
+      );
+      CustomResponse customResponse = customResponseFromJson(response);
+      return Right(customResponse);
+    } on SocketException {
+      return const Left(AppError(AppErrorType.network));
+    } on Exception {
+      return const Left(AppError(AppErrorType.api));
+    }
+  }
 }

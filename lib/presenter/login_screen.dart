@@ -4,7 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:nb_utils/nb_utils.dart';
 
-import '../blocs/dashboard/dashboard_cubit.dart';
 import '../blocs/login/login_cubit.dart';
 import '../constants/app_context.dart';
 import '../constants/constant_export.dart';
@@ -40,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
               enableLoginFlow = true;
               showErrorToast(
                   appErrorType: state.appErrorType,
-                  errorMessage: state.errorMessage);
+                  errorMessage: "Please Enter Valid IP Code");
             } else if (state is LoginError) {
               showErrorToast(
                   appErrorType: state.appErrorType,
@@ -48,7 +47,8 @@ class _LoginScreenState extends State<LoginScreen> {
             } else if (state is IPInfoLoaded) {
               enableLoginFlow = false;
             } else if (state is LoginInfoLoaded) {
-              context.read<DashboardCubit>().loadDropdownList();
+              context.read<LoginCubit>().loadDropdownList();
+            } else if (state is DropdownInfoLoaded) {
               Navigator.pushNamedAndRemoveUntil(
                 context,
                 Routes.dashboard,
@@ -96,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   keyboardType: TextInputType.text,
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Please enter code';
+                                      return 'Please Enter IP Code';
                                     }
                                     return null;
                                   },
@@ -118,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             );
                                       } else {
                                         showToast(
-                                            message: "Please enter ip code");
+                                            message: "Please Enter IP Code");
                                       }
                                     },
                                     color: ThemeConstants.white,

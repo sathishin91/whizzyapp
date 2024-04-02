@@ -17,6 +17,11 @@ class DashboardLoading extends DashboardState {
   List<Object> get props => [];
 }
 
+class ActiveSensorLoading extends DashboardState {
+  @override
+  List<Object> get props => [];
+}
+
 class DashboardError extends DashboardState {
   final AppErrorType appErrorType;
   final String? errorMessage;
@@ -27,7 +32,18 @@ class DashboardError extends DashboardState {
   List<Object?> get props => [appErrorType, errorMessage];
 }
 
+class ActiveSensorError extends DashboardState {
+  final AppErrorType appErrorType;
+  final String? errorMessage;
+
+  const ActiveSensorError({required this.appErrorType, this.errorMessage});
+
+  @override
+  List<Object?> get props => [appErrorType, errorMessage];
+}
+
 class DashboardInfoLoaded extends DashboardState {
+  // final List<ListDropdown> listDropdown;
   const DashboardInfoLoaded() : super();
 
   @override
@@ -35,12 +51,16 @@ class DashboardInfoLoaded extends DashboardState {
 }
 
 class DashboardSensorInfoLoaded extends DashboardState {
-  final DashboardSensorList dashboardSensorList;
-  const DashboardSensorInfoLoaded({required this.dashboardSensorList})
+  final DashboardSensorList dashboardSensorListCurrentWeek;
+  final DashboardSensorList dashboardSensorListLastWeek;
+  const DashboardSensorInfoLoaded(
+      {required this.dashboardSensorListCurrentWeek,
+      required this.dashboardSensorListLastWeek})
       : super();
 
   @override
-  List<Object> get props => [dashboardSensorList];
+  List<Object> get props =>
+      [dashboardSensorListCurrentWeek, dashboardSensorListLastWeek];
 }
 
 class ReportSensorInfoLoaded extends DashboardState {
@@ -57,6 +77,14 @@ class SensorDataInfoLoaded extends DashboardState {
 
   @override
   List<Object> get props => [sensorData];
+}
+
+class SensorActiveListInfoLoaded extends DashboardState {
+  final List<ActiveSensorData> sensorActiveList;
+  const SensorActiveListInfoLoaded({required this.sensorActiveList}) : super();
+
+  @override
+  List<Object> get props => [sensorActiveList];
 }
 
 class NotificationInfoLoaded extends DashboardState {

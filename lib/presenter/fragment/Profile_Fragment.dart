@@ -1,3 +1,4 @@
+import 'package:WHIZZYPCS/constants/app_context.dart';
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
 
@@ -49,8 +50,6 @@ class _ProfileFragmentState extends State<ProfileFragment> {
                     10.height,
                     ipAddress(),
                     10.height,
-                    portNumber(),
-                    5.height,
                   ],
                 ),
               ),
@@ -125,10 +124,10 @@ class _ProfileFragmentState extends State<ProfileFragment> {
   }
 
   Widget ipAddress() =>
-      const _ProfileDetails(title: "IP Address", valueList: ["13.1.2.1"]);
+      _ProfileDetails(title: "IP Address", valueList: [AppContext().baseUrl]);
 
-  Widget portNumber() =>
-      const _ProfileDetails(title: "Port Number", valueList: ["8087"]);
+  // Widget portNumber() =>
+  //     _ProfileDetails(title: "Port Number", valueList: ["8087"]);
 }
 
 class _ProfileDetails extends StatelessWidget {

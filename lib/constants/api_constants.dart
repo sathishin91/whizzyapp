@@ -24,4 +24,6 @@ class ApiConstants {
   static String notificationAll = "/api/pushnotilog/notification/listall/";
 
   static String notificationSingle = "/api/pushnotilog/notification/list/";
+
+  static String activeSensor = "/api/data/sensor/lastData";
 }

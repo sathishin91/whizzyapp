@@ -2,8 +2,11 @@ class DashboardSensorList {
   String? areaId;
   String? areaName;
   String? entryTotalLastweek;
+  String? entryTotalCurrentweek;
   String? exitTotalLastweek;
+  String? exitTotalCurrentweek;
   String? peakHourLastweek;
+  String? peakHourCurrentweek;
   String? avgDwellTime;
   String? maxDwellTime;
   List<HourlyEntry>? hourlyEntry;
@@ -14,8 +17,11 @@ class DashboardSensorList {
       {this.areaId,
       this.areaName,
       this.entryTotalLastweek,
+      this.entryTotalCurrentweek,
       this.exitTotalLastweek,
+      this.exitTotalCurrentweek,
       this.peakHourLastweek,
+      this.peakHourCurrentweek,
       this.avgDwellTime,
       this.maxDwellTime,
       this.hourlyEntry,
@@ -26,8 +32,11 @@ class DashboardSensorList {
     areaId = json['areaId'];
     areaName = json['areaName'];
     entryTotalLastweek = json['entryTotal_lastweek'];
+    entryTotalCurrentweek = json['entryTotal'];
     exitTotalLastweek = json['exitTotal_lastweek'];
+    exitTotalCurrentweek = json['exitTotal'];
     peakHourLastweek = json['peakHour_lastweek'];
+    peakHourCurrentweek = json['peakHour'];
     avgDwellTime = json['avgDwellTime'];
     maxDwellTime = json['maxDwellTime'];
     if (json['hourly_entry'] != null) {

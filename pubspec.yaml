@@ -58,6 +58,8 @@ dependencies:
   firebase_messaging: ^14.7.20
   firebase_crashlytics: ^3.4.19
   flutter_local_notifications: ^17.0.0
+  flutter_smart_dialog: ^4.9.6
+  aligned_dialog: ^0.0.7
 
 dev_dependencies:
   flutter_test:

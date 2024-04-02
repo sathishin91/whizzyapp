@@ -1,4 +1,3 @@
-import 'package:WHIZZYPCS/models/notify_model.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,6 +6,7 @@ import '../../constants/app_context.dart';
 import '../../core/app_error.dart';
 import '../../models/custom_response_model.dart';
 import '../../models/dropdown_model.dart';
+import '../../models/notify_model.dart';
 import '../../models/reportModel.dart';
 import '../../models/sensorListDashboard.dart';
 import '../../models/sensorModel.dart';
@@ -65,7 +65,6 @@ class DashboardCubit extends Cubit<DashboardState> {
         await _dashboardRepository.generateDashboardSensorList(
       sensorId = sensorId,
       startTime = startTime,
-      endTime = endTime,
     );
     response.fold(
         (l) => emit(DashboardError(
@@ -75,11 +74,41 @@ class DashboardCubit extends Cubit<DashboardState> {
         if (r.data != null) {
           // Assuming a single object
           final listData = DashboardSensorList.fromJson(r.data);
-          AppContext().hourlyEntry = listData.hourlyEntry!;
-          AppContext().hourlyExit = listData.hourlyExit!;
-          AppContext().hourlyOccupancy = listData.hourlyOccupancy!;
+          chartDataLastWeek(sensorId, endTime, listData);
+        } else {
+          emit(DashboardError(
+              appErrorType: AppErrorType.api, errorMessage: r.data));
+        }
+      } else {
+        emit(DashboardError(
+            appErrorType: AppErrorType.api, errorMessage: r.data));
+      }
+    });
+  }
 
-          emit(DashboardSensorInfoLoaded(dashboardSensorList: listData));
+  void chartDataLastWeek(
+    String sensorId,
+    String startTime,
+    DashboardSensorList listDataCurrentWeek,
+  ) async {
+    emit(DashboardLoading());
+    final Either<AppError, CustomResponse> response =
+        await _dashboardRepository.generateDashboardSensorList(
+      sensorId = sensorId,
+      startTime = startTime,
+    );
+    response.fold(
+        (l) => emit(DashboardError(
+              appErrorType: l.appErrorType,
+            )), (r) {
+      if (r.success) {
+        if (r.data != null) {
+          // Assuming a single object
+          final listData = DashboardSensorList.fromJson(r.data);
+          emit(DashboardSensorInfoLoaded(
+            dashboardSensorListCurrentWeek: listDataCurrentWeek,
+            dashboardSensorListLastWeek: listData,
+          ));
         } else {
           emit(DashboardError(
               appErrorType: AppErrorType.api, errorMessage: r.data));
@@ -130,6 +159,7 @@ class DashboardCubit extends Cubit<DashboardState> {
     String areaId,
   ) async {
     emit(DashboardLoading());
+
     final Either<AppError, CustomResponse> response =
         await _dashboardRepository.generateSensorList(
       areaId = areaId,
@@ -149,6 +179,37 @@ class DashboardCubit extends Cubit<DashboardState> {
         }
       } else {
         emit(DashboardError(
+            appErrorType: AppErrorType.api, errorMessage: r.data));
+      }
+    });
+  }
+
+  // sensor active list
+  void activeSensorList() async {
+    emit(ActiveSensorLoading());
+    final Either<AppError, CustomResponse> response =
+        await _dashboardRepository.generateActiveSensorList();
+    response.fold(
+        (l) => emit(ActiveSensorError(
+              appErrorType: l.appErrorType,
+            )), (r) {
+      if (r.success) {
+        if (r.data != null) {
+          List<dynamic> dataList = r.data;
+          List<Map<String, dynamic>> jsonDataList =
+              dataList.cast<Map<String, dynamic>>();
+
+          List<ActiveSensorData> sensorDataList = jsonDataList
+              .map((data) => ActiveSensorData.fromJson(data))
+              .toList();
+
+          emit(SensorActiveListInfoLoaded(sensorActiveList: sensorDataList));
+        } else {
+          emit(ActiveSensorError(
+              appErrorType: AppErrorType.api, errorMessage: r.data));
+        }
+      } else {
+        emit(ActiveSensorError(
             appErrorType: AppErrorType.api, errorMessage: r.data));
       }
     });
@@ -177,7 +238,6 @@ class DashboardCubit extends Cubit<DashboardState> {
             }
           }).toList();
           emit(NotificationInfoLoaded(notificationAll: notificationAllList));
-          print("object");
         } else {
           emit(DashboardError(
               appErrorType: AppErrorType.api, errorMessage: r.data));

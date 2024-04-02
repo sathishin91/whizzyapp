@@ -172,7 +172,6 @@ class _ReportFragmentState extends State<ReportFragment> {
                                               "sensorId": "${sensor.sensorId}"
                                             });
                                           }
-                                          print("optionData $optionData");
                                         });
                                       },
                                       title: "Select All",
@@ -184,35 +183,42 @@ class _ReportFragmentState extends State<ReportFragment> {
                                 ],
                               ),
                               5.height,
-                              ...sensors!.map((sensor) {
-                                return SizedBox(
-                                  height: 40,
-                                  child: CheckboxListTile(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 12.0, vertical: -12.0),
-                                    title: Text(sensor.sensorId!),
-                                    value: selectedSensorIds
-                                        .contains(sensor.sensorId),
-                                    onChanged: (bool? value) {
-                                      setState(() {
-                                        if (value != null && value) {
-                                          selectedSensorIds
-                                              .add(sensor.sensorId!);
-                                          optionData.add({
-                                            "sensorId": "${sensor.sensorId}"
+                              SingleChildScrollView(
+                                  child: Column(
+                                children: [
+                                  ...sensors!.map((sensor) {
+                                    return SizedBox(
+                                      height: 35,
+                                      child: CheckboxListTile(
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 12.0,
+                                                vertical: -12.0),
+                                        title: Text(sensor.sensorId!),
+                                        value: selectedSensorIds
+                                            .contains(sensor.sensorId),
+                                        onChanged: (bool? value) {
+                                          setState(() {
+                                            if (value != null && value) {
+                                              selectedSensorIds
+                                                  .add(sensor.sensorId!);
+                                              optionData.add({
+                                                "sensorId": "${sensor.sensorId}"
+                                              });
+                                            } else {
+                                              selectedSensorIds
+                                                  .remove(sensor.sensorId!);
+                                              optionData.removeWhere((map) =>
+                                                  map["sensorId"] ==
+                                                  sensor.sensorId);
+                                            }
                                           });
-                                        } else {
-                                          selectedSensorIds
-                                              .remove(sensor.sensorId!);
-                                          optionData.removeWhere((map) =>
-                                              map["sensorId"] ==
-                                              sensor.sensorId);
-                                        }
-                                      });
-                                    },
-                                  ),
-                                );
-                              }).toList(),
+                                        },
+                                      ),
+                                    );
+                                  }).toList(),
+                                ],
+                              )),
                               15.height,
                               Center(
                                 child: SizedBox(
@@ -417,6 +423,11 @@ class _ReportFragmentState extends State<ReportFragment> {
     return "${formattedDate}000000";
   }
 
+  String getEndTimeAsString(DateTime dateValue) {
+    String formattedDate = DateFormat('yyyyMMdd').format(dateValue);
+    return "${formattedDate}225959";
+  }
+
   String getDateTimeList(String dateValue) {
     DateTime dateTime = DateTime.parse(dateValue);
     String formattedDate = DateFormat('dd/MM/yyyy').format(dateTime);
@@ -582,7 +593,7 @@ class _ReportFragmentState extends State<ReportFragment> {
 
           if (values != null) {
             startTimeReport = getDateTimeAsString(values[0]!);
-            endTimeReport = getDateTimeAsString(values[1]!);
+            endTimeReport = getEndTimeAsString(values[1]!);
             setState(() {
               _dialogCalendarPickerValue = values;
             });
