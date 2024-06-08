@@ -12,6 +12,8 @@ class ApiConstants {
 
   static String areaListDropdown = "/api/area/list/dashboard/";
 
+  static String areaOccupancy = "/api/data/m/occupancy/today/0";
+
   static String dashboardSensorList = "/api/data/m/area/";
 
   static String sensorList =

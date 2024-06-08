@@ -2,13 +2,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferenceHelper {
   static const String _baseUrl = "_baseUrl";
+  static const String _ipCode = "_ipCode";
   static const String _email = "_email";
   static const String _userId = "_userId";
   static const String _checkIfAccountCreated = "_checkIfAccountCreated";
 
   static void saveBaseUrl(String value) => _saveString(_baseUrl, value);
 
+  static void saveIpCode(String value) => _saveString(_ipCode, value);
+
   static Future<String?> getBaseUrl() async => _getString(_baseUrl);
+
+  static Future<String?> getIpCode() async => _getString(_ipCode);
 
   static void saveEmail(String value) => _saveString(_email, value);
 

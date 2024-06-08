@@ -32,6 +32,7 @@ class LoginCubit extends Cubit<LoginState> {
           final ipAddress = r.data['ip'];
           final portNumber = r.data['port'];
           PreferenceHelper.saveBaseUrl(ipAddress + ":" + portNumber);
+          PreferenceHelper.saveIpCode(ipCode);
           emit(const IPInfoLoaded());
         } else {
           emit(IPError(appErrorType: AppErrorType.api, errorMessage: r.data));

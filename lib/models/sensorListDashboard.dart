@@ -103,3 +103,25 @@ class HourlyEntry {
     return data;
   }
 }
+
+class OccupancyData {
+  String? areaId;
+  String? areaName;
+  String? occupancy;
+
+  OccupancyData({this.areaId, this.areaName, this.occupancy});
+
+  OccupancyData.fromJson(Map<String, dynamic> json) {
+    areaId = json['areaId'];
+    areaName = json['areaName'];
+    occupancy = json['occupancy'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['areaId'] = areaId;
+    data['areaName'] = areaName;
+    data['occupancy'] = occupancy;
+    return data;
+  }
+}

@@ -6,6 +6,7 @@ import 'package:dartz/dartz.dart';
 import '../constants/api_constants.dart';
 import '../core/api_client.dart';
 import '../core/app_error.dart';
+import '../core/preference_helper.dart';
 import '../models/custom_response_model.dart';
 
 class DashboardRepository {
@@ -19,6 +20,26 @@ class DashboardRepository {
         ApiConstants.areaListDropdown,
         params: {
           "token": "",
+        },
+      );
+      CustomResponse customResponse = customResponseFromJson(response);
+      return Right(customResponse);
+    } on SocketException {
+      return const Left(AppError(AppErrorType.network));
+    } on Exception {
+      return const Left(AppError(AppErrorType.api));
+    }
+  }
+
+  //occupancy list
+  Future<Either<AppError, CustomResponse>> generateOccupancyList() async {
+    try {
+      String ipcode = (await PreferenceHelper.getIpCode())!;
+      final response = await _apiClient.postMethod(
+        ApiConstants.areaOccupancy,
+        params: {
+          "token": "",
+          "siteCode": ipcode,
         },
       );
       CustomResponse customResponse = customResponseFromJson(response);

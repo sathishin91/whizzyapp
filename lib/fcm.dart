@@ -1,15 +1,14 @@
 import 'package:WHIZZYPCS/constants/theme_constants.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'core/preference_helper.dart';
 import 'routes/route_generator.dart';
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+// final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+//     FlutterLocalNotificationsPlugin();
 FirebaseMessaging messaging = FirebaseMessaging.instance;
 
 dynamic appToken = "";
@@ -41,31 +40,31 @@ Future<void> notificationInfo() async {
   } catch (e) {}
 }
 
-Future<void> fcmNotifications([message]) async {
-  print("message ${message.toString()}");
+// Future<void> fcmNotifications([message]) async {
+//   print("message ${message.toString()}");
 
-  // Get the initial message data
-  // RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-  if (message != null) {
-    RemoteNotification? notification = message.notification;
-    AndroidNotification? android = message.notification?.android;
-    print("Initial message received");
+//   // Get the initial message data
+//   // RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+//   if (message != null) {
+//     RemoteNotification? notification = message.notification;
+//     AndroidNotification? android = message.notification?.android;
+//     print("Initial message received");
 
-    if (notification != null && android != null) {
-      showLocalNotification(notification);
-    }
-  }
-  // Listen for subsequent messages
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    RemoteNotification? notification = message.notification;
-    AndroidNotification? android = message.notification?.android;
-    print("Subsequent message received");
+//     if (notification != null && android != null) {
+//       showLocalNotification(notification);
+//     }
+//   }
+//   // Listen for subsequent messages
+//   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+//     RemoteNotification? notification = message.notification;
+//     AndroidNotification? android = message.notification?.android;
+//     print("Subsequent message received");
 
-    if (notification != null && android != null) {
-      showLocalNotification(notification);
-    }
-  });
-}
+//     if (notification != null && android != null) {
+//       showLocalNotification(notification);
+//     }
+//   });
+// }
 
 Future<void> storeMessageLocallyPref(RemoteMessage message) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -116,58 +115,58 @@ void goHome() {
       navigatorKey.currentState!.context, Routes.dashboard);
 }
 
-void showLocalNotification(RemoteNotification notification) {
-  flutterLocalNotificationsPlugin.show(
-    notification.hashCode,
-    notification.title,
-    notification.body,
-    const NotificationDetails(
-      android: AndroidNotificationDetails(
-        'high_importance_channel',
-        'High Importance Notifications',
-        channelDescription: 'This channel is used for important notifications.',
-        color: ThemeConstants.primaryColor,
-        playSound: true,
-        icon: '@drawable/notification_icon',
-      ),
-    ),
-  );
-}
+// void showLocalNotification(RemoteNotification notification) {
+//   flutterLocalNotificationsPlugin.show(
+//     notification.hashCode,
+//     notification.title,
+//     notification.body,
+//     const NotificationDetails(
+//       android: AndroidNotificationDetails(
+//         'high_importance_channel',
+//         'High Importance Notifications',
+//         channelDescription: 'This channel is used for important notifications.',
+//         color: ThemeConstants.primaryColor,
+//         playSound: true,
+//         icon: '@drawable/notification_icon',
+//       ),
+//     ),
+//   );
+// }
 
 // not using this methods
-fcmNotificationChannel() async {
-  const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'high_importance_channel', // id
-      'High Importance Notifications', // title
-      description:
-          'This channel is used for important notifications.', // description
-      importance: Importance.high,
-      playSound: true);
-  return channel;
-}
+// fcmNotificationChannel() async {
+//   const AndroidNotificationChannel channel = AndroidNotificationChannel(
+//       'high_importance_channel', // id
+//       'High Importance Notifications', // title
+//       description:
+//           'This channel is used for important notifications.', // description
+//       importance: Importance.high,
+//       playSound: true);
+//   return channel;
+// }
 
-void showFlutterNotification(RemoteMessage message) async {
-  AndroidNotificationChannel channel = await fcmNotificationChannel();
-  RemoteNotification? notification = message.notification;
-  AndroidNotification? android = message.notification?.android;
-  if (notification != null && android != null) {
-    flutterLocalNotificationsPlugin.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          channel.id,
-          channel.name,
-          channelDescription: channel.description,
-          color: Colors.blue,
-          playSound: true,
-          icon: '@mipmap/launcher_icon',
-        ),
-      ),
-    );
-  }
-}
+// void showFlutterNotification(RemoteMessage message) async {
+//   AndroidNotificationChannel channel = await fcmNotificationChannel();
+//   RemoteNotification? notification = message.notification;
+//   AndroidNotification? android = message.notification?.android;
+//   if (notification != null && android != null) {
+//     flutterLocalNotificationsPlugin.show(
+//       notification.hashCode,
+//       notification.title,
+//       notification.body,
+//       NotificationDetails(
+//         android: AndroidNotificationDetails(
+//           channel.id,
+//           channel.name,
+//           channelDescription: channel.description,
+//           color: Colors.blue,
+//           playSound: true,
+//           icon: '@mipmap/launcher_icon',
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 Future<void> fcmAppNotifications(BuildContext context) async {
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
@@ -193,52 +192,52 @@ Future<void> fcmAppNotifications(BuildContext context) async {
 }
 
 bool isFlutterLocalNotificationsInitialized = false;
-Future<void> setupFlutterNotifications() async {
-  AndroidNotificationChannel channel = await fcmNotificationChannel();
-  if (isFlutterLocalNotificationsInitialized) {
-    return;
-  }
-  channel = const AndroidNotificationChannel(
-    'high_importance_channel', // id
-    'High Importance Notifications', // title
-    description:
-        'This channel is used for important notifications.', // description
-    importance: Importance.high,
-  );
+// Future<void> setupFlutterNotifications() async {
+//   AndroidNotificationChannel channel = await fcmNotificationChannel();
+//   if (isFlutterLocalNotificationsInitialized) {
+//     return;
+//   }
+//   channel = const AndroidNotificationChannel(
+//     'high_importance_channel', // id
+//     'High Importance Notifications', // title
+//     description:
+//         'This channel is used for important notifications.', // description
+//     importance: Importance.high,
+//   );
 
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+//   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+//       FlutterLocalNotificationsPlugin();
 
-  /// Create an Android Notification Channel.
-  ///
-  /// We use this channel in the `AndroidManifest.xml` file to override the
-  /// default FCM channel to enable heads up notifications.
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(channel);
+//   /// Create an Android Notification Channel.
+//   ///
+//   /// We use this channel in the `AndroidManifest.xml` file to override the
+//   /// default FCM channel to enable heads up notifications.
+//   await flutterLocalNotificationsPlugin
+//       .resolvePlatformSpecificImplementation<
+//           AndroidFlutterLocalNotificationsPlugin>()
+//       ?.createNotificationChannel(channel);
 
-  /// Update the iOS foreground notification presentation options to allow
-  /// heads up notifications.
-  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
-  isFlutterLocalNotificationsInitialized = true;
-}
+//   /// Update the iOS foreground notification presentation options to allow
+//   /// heads up notifications.
+//   await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+//     alert: true,
+//     badge: true,
+//     sound: true,
+//   );
+//   isFlutterLocalNotificationsInitialized = true;
+// }
 
-void showNotification() async {
-  AndroidNotificationChannel channel = await fcmNotificationChannel();
-  flutterLocalNotificationsPlugin.show(
-      0,
-      "Testing",
-      "How you doing?",
-      NotificationDetails(
-          android: AndroidNotificationDetails(channel.id, channel.name,
-              channelDescription: channel.description,
-              importance: Importance.high,
-              color: Colors.blue,
-              playSound: true,
-              icon: '@mipmap/ic_launcher')));
-}
+// void showNotification() async {
+//   AndroidNotificationChannel channel = await fcmNotificationChannel();
+//   flutterLocalNotificationsPlugin.show(
+//       0,
+//       "Testing",
+//       "How you doing?",
+//       NotificationDetails(
+//           android: AndroidNotificationDetails(channel.id, channel.name,
+//               channelDescription: channel.description,
+//               importance: Importance.high,
+//               color: Colors.blue,
+//               playSound: true,
+//               icon: '@mipmap/ic_launcher')));
+// }

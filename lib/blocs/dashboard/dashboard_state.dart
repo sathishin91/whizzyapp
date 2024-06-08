@@ -71,6 +71,14 @@ class ReportSensorInfoLoaded extends DashboardState {
   List<Object> get props => [reportModel];
 }
 
+class OccupancyInfoLoaded extends DashboardState {
+  final List<OccupancyData> occupancyData;
+  const OccupancyInfoLoaded({required this.occupancyData}) : super();
+
+  @override
+  List<Object> get props => [occupancyData];
+}
+
 class SensorDataInfoLoaded extends DashboardState {
   final SensorData sensorData;
   const SensorDataInfoLoaded({required this.sensorData}) : super();

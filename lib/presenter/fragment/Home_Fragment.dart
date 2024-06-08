@@ -26,7 +26,7 @@ class HomeFragment extends StatefulWidget {
 }
 
 class SalesData {
-  final String month;
+  final int month;
   final int sales;
 
   SalesData(this.month, this.sales);
@@ -46,14 +46,17 @@ class _HomeFragmentState extends State<HomeFragment> {
   String avgDwellTime = "";
   String maxDwellTime = "";
   String startTime = "";
+  bool startOccupancyToday = true;
   String endTime = "";
   String sensorIdValue = "";
+  List<OccupancyData> occupancyDataTodayList = [];
   @override
   void initState() {
     super.initState();
     startTime = getCurrentDateTimeAsString();
     endTime = getLastWeekInitial();
     context.read<DashboardCubit>().loadDropdownList();
+    context.read<DashboardCubit>().occupancyList();
   }
 
   @override
@@ -160,6 +163,7 @@ class _HomeFragmentState extends State<HomeFragment> {
   List<ChartData> chartHourOccupancyLastWeek = [];
 
   int maxValueHourEntry = 200;
+  int maxValueOccupancy = 0;
   int intervalHourEntry = 40;
 
   int maxValueHourExit = 200;
@@ -223,6 +227,7 @@ class _HomeFragmentState extends State<HomeFragment> {
   // Method to handle refresh action
   Future<void> _handleRefresh() async {
     // Simulate a delay for refreshing data (e.g., fetch new data from API)
+
     callAPIMethod(startTime, endTime, sensorIdValue);
     await Future.delayed(const Duration(seconds: 2));
 
@@ -236,6 +241,10 @@ class _HomeFragmentState extends State<HomeFragment> {
       onRefresh: _handleRefresh,
       child: BlocConsumer<DashboardCubit, DashboardState>(
         listener: (context, state) {
+          if (state is OccupancyInfoLoaded) {
+            print("stateeee======== ${state.occupancyData}");
+            occupancyDataTodayList = state.occupancyData;
+          }
           if (state is DashboardInfoLoaded) {
             _selectTitle = DropDownValues(
               name: AppContext().listDropdown[0].areaName!,
@@ -324,6 +333,7 @@ class _HomeFragmentState extends State<HomeFragment> {
                       : maxValueHourOccupancyLastWeek;
               print(
                   "maxoccupancy $maxValue ===== $maxValueHourOccupancy ----- $maxValueHourOccupancyLastWeek ");
+              maxValueOccupancy = maxValueHourOccupancy;
               int range = maxValue;
               int roundedRange = roundToNearest(range, 50);
               intervalHourOccupancy = (roundedRange / 5).ceil();
@@ -357,6 +367,78 @@ class _HomeFragmentState extends State<HomeFragment> {
                         ],
                       ),
                       15.height,
+                      startOccupancyToday && occupancyDataTodayList.isNotEmpty
+                          ? Container(
+                              width: double.infinity,
+                              child: Card(
+                                elevation: 2,
+                                color: ThemeConstants.exitTotalColorCode,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(8.0)),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 6.0, top: 5, bottom: 2, right: 10),
+                                  child: SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        RichText(
+                                          text: TextSpan(
+                                            text: 'Occupancy',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleLarge!,
+                                            children: <TextSpan>[
+                                              TextSpan(
+                                                text: "(Current Occupancy)",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleLarge,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        ...occupancyDataTodayList
+                                            .map((occupancyData) {
+                                          return RichText(
+                                            text: TextSpan(
+                                              text:
+                                                  '${occupancyData.areaName!} : ',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium!,
+                                              children: <TextSpan>[
+                                                TextSpan(
+                                                  text: occupancyData.occupancy,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium!
+                                                      .copyWith(
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                          // Text(
+                                          //   '${occupancyData.areaName!} : ${occupancyData.occupancy!}',
+                                          //   style: Theme.of(context)
+                                          //       .textTheme
+                                          //       .bodyMedium,
+                                          // );
+                                        }).toList(),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Container(),
+                      startOccupancyToday ? 10.height : 1.height,
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -370,22 +452,12 @@ class _HomeFragmentState extends State<HomeFragment> {
                             "Last Week: ${convertTo12HourFormat(peakHour)}",
                             ThemeConstants.peakHourColorCode,
                           ),
-                          // cardWidget(
-                          //   "Max Occupancy: $exitTotalCurrent",
-                          //   "Last Week: $exitTotal ",
-                          //   ThemeConstants.exitTotalColorCode,
-                          // ),
                         ],
                       ),
                       10.height,
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          // cardWidget(
-                          //   "Peak Hour: $peakHourCurrent",
-                          //   "Last Week: $peakHour ",
-                          //   ThemeConstants.peakHourColorCode,
-                          // ),
                           Card(
                             elevation: 2,
                             color: ThemeConstants.avgDwellTimeColorCode,
@@ -431,29 +503,31 @@ class _HomeFragmentState extends State<HomeFragment> {
                           text: 'Hourly Entry',
                           alignment: ChartAlignment.near,
                         ),
+                        enableMultiSelection: true,
                         legend: Legend(
                           isVisible: true,
                           position: LegendPosition.bottom,
                         ),
                         primaryXAxis: CategoryAxis(
                           majorGridLines: const MajorGridLines(
-                            width: 0,
+                            width: 1,
                             dashArray: [1, 5],
                             color: Colors.grey,
                           ),
+                          labelPlacement: LabelPlacement.onTicks,
+                          labelPosition: ChartDataLabelPosition.outside,
                         ),
                         primaryYAxis: NumericAxis(
                           opposedPosition: false,
                           axisLine: const AxisLine(width: 1),
-                          // majorGridLines: const MajorGridLines(width: 1),
                           majorTickLines: const MajorTickLines(size: 1),
                           minimum: 0,
                           maximum: maxValueHourEntry.toDouble(),
                           interval: intervalHourEntry.toDouble(),
                         ),
                         series: <ChartSeries<ChartData, String>>[
-                          LineSeries<ChartData, String>(
-                            name: "Current Week",
+                          SplineSeries<ChartData, String>(
+                            name: "Today",
                             color: Colors.blue.shade400,
                             dataSource: chartHourEntry,
                             xValueMapper: (ChartData data, _) =>
@@ -467,12 +541,12 @@ class _HomeFragmentState extends State<HomeFragment> {
                               shape: DataMarkerType.circle,
                             ),
                           ),
-                          LineSeries<ChartData, String>(
+                          SplineSeries<ChartData, String>(
                             name: "Last Week",
                             color: Colors.grey.shade400,
                             dataSource: chartHourEntryLastWeek,
                             xValueMapper: (ChartData data, _) =>
-                                "${data.hour.toString()}hr",
+                                "${(data.hour).toString()}hr",
                             yValueMapper: (ChartData data, _) => data.inValue,
                             markerSettings: MarkerSettings(
                               isVisible: true,
@@ -483,20 +557,16 @@ class _HomeFragmentState extends State<HomeFragment> {
                             ),
                           ),
                         ],
-                        tooltipBehavior: TooltipBehavior(
+                        trackballBehavior: TrackballBehavior(
                           enable: true,
-                          format: 'point.x \n point.y',
+                          tooltipDisplayMode:
+                              TrackballDisplayMode.floatAllPoints,
+                          tooltipSettings:
+                              const InteractiveTooltip(enable: true),
+                          lineType: TrackballLineType.vertical,
+                          shouldAlwaysShow: false,
+                          activationMode: ActivationMode.singleTap,
                         ),
-                        // trackballBehavior: TrackballBehavior(
-                        //   enable: true,
-                        //   activationMode: ActivationMode.singleTap,
-                        //   // tooltipSettings:
-                        //   //     const InteractiveTooltip(enable: true),
-                        //   markerSettings: const TrackballMarkerSettings(
-                        //     markerVisibility: TrackballVisibilityMode.visible,
-                        //   ),
-                        //   lineType: TrackballLineType.horizontal,
-                        // ),
                       ),
                       20.height,
                       SfCartesianChart(
@@ -506,10 +576,11 @@ class _HomeFragmentState extends State<HomeFragment> {
                         ),
                         primaryXAxis: CategoryAxis(
                           majorGridLines: const MajorGridLines(
-                            width: 0,
+                            width: 1,
                             dashArray: [1, 5],
                             color: Colors.grey,
                           ),
+                          labelPlacement: LabelPlacement.onTicks,
                         ),
                         primaryYAxis: NumericAxis(
                           axisLine: const AxisLine(width: 2),
@@ -522,8 +593,8 @@ class _HomeFragmentState extends State<HomeFragment> {
                         legend: Legend(
                             isVisible: true, position: LegendPosition.bottom),
                         series: <ChartSeries<ChartData, String>>[
-                          LineSeries<ChartData, String>(
-                            name: "Current Week",
+                          SplineSeries<ChartData, String>(
+                            name: "Today",
                             color: Colors.pink.shade300,
                             dataSource: chartHourExit,
                             xValueMapper: (ChartData data, _) =>
@@ -534,10 +605,10 @@ class _HomeFragmentState extends State<HomeFragment> {
                               height: 3, // Reduce the size of the marker
                               width: 3, // Reduce the size of the marker
                               borderColor: Colors.red.shade300,
-                              shape: DataMarkerType.diamond,
+                              shape: DataMarkerType.circle,
                             ),
                           ),
-                          LineSeries<ChartData, String>(
+                          SplineSeries<ChartData, String>(
                             name: "Last Week",
                             color: Colors.grey.shade400,
                             dataSource: chartHourExitLastWeek,
@@ -549,17 +620,23 @@ class _HomeFragmentState extends State<HomeFragment> {
                               height: 3, // Reduce the size of the marker
                               width: 3, // Reduce the size of the marker
                               borderColor: Colors.green.shade300,
-                              shape: DataMarkerType.diamond,
+                              shape: DataMarkerType.circle,
                             ),
                           ),
                         ],
-                        tooltipBehavior: TooltipBehavior(
+                        // tooltipBehavior: TooltipBehavior(
+                        //   enable: true,
+                        //   format: 'point.x \n Count - point.y',
+                        // ),
+                        trackballBehavior: TrackballBehavior(
                           enable: true,
-                          // format: 'point.x \n point.y',
-                          header: "",
-                          format: 'point.x \n point.y',
-                          // format:
-                          //     'point.x \n Current Week: point.y1 \n Last Week: point.y2',
+                          tooltipDisplayMode:
+                              TrackballDisplayMode.floatAllPoints,
+                          tooltipSettings:
+                              const InteractiveTooltip(enable: true),
+                          lineType: TrackballLineType.vertical,
+                          shouldAlwaysShow: false,
+                          activationMode: ActivationMode.singleTap,
                         ),
                       ),
                       20.height,
@@ -570,10 +647,11 @@ class _HomeFragmentState extends State<HomeFragment> {
                         ),
                         primaryXAxis: CategoryAxis(
                           majorGridLines: const MajorGridLines(
-                            width: 0,
+                            width: 1,
                             dashArray: [1, 5],
                             color: Colors.grey,
                           ),
+                          labelPlacement: LabelPlacement.onTicks,
                         ),
                         primaryYAxis: NumericAxis(
                           axisLine: const AxisLine(width: 2),
@@ -586,25 +664,10 @@ class _HomeFragmentState extends State<HomeFragment> {
                         legend: Legend(
                             isVisible: true, position: LegendPosition.bottom),
                         series: <ChartSeries<ChartData, String>>[
-                          LineSeries<ChartData, String>(
-                            name: "Current Week",
+                          SplineSeries<ChartData, String>(
+                            name: "Today",
                             color: Colors.yellow.shade800,
                             dataSource: chartHourOccupancy,
-                            xValueMapper: (ChartData data, _) =>
-                                "${data.hour.toString()}hr",
-                            yValueMapper: (ChartData data, _) => data.inValue,
-                            markerSettings: MarkerSettings(
-                              isVisible: true,
-                              height: 3,
-                              width: 3,
-                              borderColor: Colors.red.shade300,
-                              shape: DataMarkerType.diamond,
-                            ),
-                          ),
-                          LineSeries<ChartData, String>(
-                            name: "Last Week",
-                            color: Colors.grey.shade400,
-                            dataSource: chartHourOccupancyLastWeek,
                             xValueMapper: (ChartData data, _) =>
                                 "${data.hour.toString()}hr",
                             yValueMapper: (ChartData data, _) => data.inValue,
@@ -613,20 +676,39 @@ class _HomeFragmentState extends State<HomeFragment> {
                               height: 2, // Reduce the size of the marker
                               width: 2, // Reduce the size of the marker
                               borderColor: Colors.green.shade800,
-                              shape: DataMarkerType.diamond,
+                              shape: DataMarkerType.circle,
+                            ),
+                          ),
+                          SplineSeries<ChartData, String>(
+                            name: "Last Week",
+                            color: Colors.grey.shade400,
+                            dataSource: chartHourOccupancyLastWeek,
+                            xValueMapper: (ChartData data, _) =>
+                                "${data.hour.toString()}hr",
+                            yValueMapper: (ChartData data, _) => data.inValue,
+                            markerSettings: MarkerSettings(
+                              isVisible: true,
+                              height: 3,
+                              width: 3,
+                              borderColor: Colors.red.shade300,
+                              shape: DataMarkerType.circle,
                             ),
                           ),
                         ],
                         trackballBehavior: TrackballBehavior(
                           enable: true,
-                          activationMode: ActivationMode.singleTap,
+                          tooltipDisplayMode:
+                              TrackballDisplayMode.floatAllPoints,
                           tooltipSettings:
                               const InteractiveTooltip(enable: true),
-                          markerSettings: const TrackballMarkerSettings(
-                            markerVisibility: TrackballVisibilityMode.visible,
-                          ),
                           lineType: TrackballLineType.vertical,
+                          shouldAlwaysShow: false,
+                          activationMode: ActivationMode.singleTap,
                         ),
+                        // tooltipBehavior: TooltipBehavior(
+                        //   enable: true,
+                        //   format: 'point.x \n Count - point.y',
+                        // ),
                       ),
                     ],
                   ),
@@ -686,6 +768,17 @@ class _HomeFragmentState extends State<HomeFragment> {
           final formatDate = DateFormat('yyyyMMdd').format(selectedDateTime);
           // final endDate = DateFormat('yyyyMMdd').format(selectedDateTime);
           startTime = formatDate;
+
+          final now = DateTime.now();
+          if (selectedDateTime.year == now.year &&
+              selectedDateTime.month == now.month &&
+              selectedDateTime.day == now.day) {
+            startOccupancyToday = true;
+            context.read<DashboardCubit>().occupancyList();
+          } else {
+            startOccupancyToday = false;
+          }
+
           endTime = getLastWeekEndTime(selectedDateTime);
           callAPIMethod(startTime, endTime, sensorIdValue);
         }

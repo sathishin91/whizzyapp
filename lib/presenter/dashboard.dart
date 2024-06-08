@@ -230,12 +230,15 @@ class _DashboardState extends State<Dashboard> {
                                 color: const Color.fromARGB(255, 3, 7, 8)),
                         Text(
                           data.title.validate(),
-                          style:
-                              Theme.of(context).textTheme.bodySmall!.copyWith(
-                                    color: selectedIndex == index
-                                        ? data.colors
-                                        : ThemeConstants.grey.withOpacity(0.4),
-                                  ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall!
+                              .copyWith(
+                                color: selectedIndex == index
+                                    ? data.colors
+                                    : ThemeConstants.grey.withOpacity(0.4),
+                                fontSize: 14, //ios required 14 android default
+                              ),
                         ),
                       ],
                     ).onTap(() {

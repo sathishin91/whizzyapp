@@ -54,6 +54,37 @@ class DashboardCubit extends Cubit<DashboardState> {
     });
   }
 
+  //occupancy data list
+  void occupancyList() async {
+    final Either<AppError, CustomResponse> response =
+        await _dashboardRepository.generateOccupancyList();
+    response.fold(
+        (l) => emit(DashboardError(
+              appErrorType: l.appErrorType,
+            )), (r) {
+      if (r.success) {
+        if (r.data != null) {
+          // Assuming a single object
+          final List<dynamic> dataList = r.data;
+          final List<OccupancyData> notificationAllList = dataList.map((item) {
+            if (item is Map<String, dynamic>) {
+              return OccupancyData.fromJson(item);
+            } else {
+              throw FormatException("Invalid data format: $item");
+            }
+          }).toList();
+          emit(OccupancyInfoLoaded(occupancyData: notificationAllList));
+        } else {
+          emit(DashboardError(
+              appErrorType: AppErrorType.api, errorMessage: r.data));
+        }
+      } else {
+        emit(DashboardError(
+            appErrorType: AppErrorType.api, errorMessage: r.data));
+      }
+    });
+  }
+
   // "${ApiConstants.dashboardSensorList}5487C344-00CC-4020-9A46-CF249395908D/20231201080000/20231201235959",
   void dashboardSensorList(
     String sensorId,
