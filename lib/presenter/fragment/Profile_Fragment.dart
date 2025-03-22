@@ -54,6 +54,25 @@ class _ProfileFragmentState extends State<ProfileFragment> {
                 ),
               ),
             ),
+            Card(
+              elevation: 4,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    // Radio(
+                    //   value: value,
+                    //   groupValue: _selectedValue,
+                    //   onChanged:
+                    //       _handleRadioValueChange, // Handle radio button tap
+                    // ),
+                    // Icon(icon),
+                    // SizedBox(width: 10),
+                    // Text(label),
+                  ],
+                ),
+              ),
+            ),
             Container(
               margin: const EdgeInsets.all(12),
               child: Column(
